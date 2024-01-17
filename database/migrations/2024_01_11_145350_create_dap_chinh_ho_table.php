@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('dap_chinh_ho', function (Blueprint $table) {
             $table->id();
             $table->foreignId('ho_id')->constrained('ho_thuy_loi');
-            $table->string('cao_trinh_dinh_dap');
+            $table->string('cao_trinh_dinh_dap')->nullable();
             $table->double('H_max', 8, 1);
             $table->double('length', 8, 1);
         });
