@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('get-lakes', [ShapefileController::class, 'index']);
+Route::post('get-feature-info', [ShapefileController::class, 'getFeatureInfo']);
+Route::post('search-feature-name', [ShapefileController::class, 'searchFeatureName']);
 
 
 
