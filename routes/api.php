@@ -3,6 +3,8 @@
 use App\Http\Controllers\ShapefileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +21,11 @@ Route::get('get-lakes', [ShapefileController::class, 'index']);
 Route::post('get-feature-info', [ShapefileController::class, 'getFeatureInfo']);
 Route::post('search-feature-name', [ShapefileController::class, 'searchFeatureName']);
 
+Route::post('login', [UserController::class, 'login']);
+
+Route::group(['middleware' => 'jwt'], function () {
+    Route::post('get-authenticated-user', [UserController::class, 'getAuthenticatedUser']);
+});
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

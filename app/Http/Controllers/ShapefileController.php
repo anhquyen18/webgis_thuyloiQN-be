@@ -60,42 +60,83 @@ class ShapefileController extends Controller
         // return $postData;
         switch ($postData['layer']) {
             case 'ho_chua_quang_nam_epsg5899':
-                // $lake1 = DB::table($postData['layer'])->where('name', '=', $postData['name'])->get();
+                // Làm sẵn tên cho front-end nhưng thấy không nên, để front-end
+                // $generalInfo = DB::table('ho_thuy_loi')
+                //     ->select(DB::raw("ten as \"Tên\", CONCAT('xã ', vi_tri_xa, ', huyện ', vi_tri_huyen) as \"Vị trí\",
+                //      nam_xd as \"Năm xây dựng\", don_vi_ql as \"Đơn vị quản lý\", co_quy_trinh_vh as \"Quy trình vận hành\", id as \"ID\""))
+                //     ->whereRaw("LOWER(REPLACE(UNACCENT(ten), ' ', '')) = LOWER(REPLACE(?, '_', ''))", [$postData['name']])
+                //     ->first();
+                // if ($generalInfo) {
+                //     $techInfo1 = DB::table('ho_thuy_loi')
+                //         ->select(
+                //             'f_tuoi_tk as Diện tích tưới thiết kế (ha)',
+                //             'f_tuoi_tt as Diện tích tưới thật tế (ha)',
+                //             'f_lv as Diện tích lưu vực (km2)',
+                //             'wmndb as W mndbt (10^6 m3)', 
+                //             'mnc as Mực nước chết (m)',
+                //             'mndbt as Mực nước dâng bình thường (m)',
+                //             'mnlkt as Mực nước lũ thiết kế (m)',
+                //             'so_dap_phu as Số đập phụ',
+                //             'cao_trinh_dinh_tcs as Cao trình đỉnh tường chắn sóng (m)',
+                //         )
+                //         ->where('id', '=', $generalInfo->ID)
+                //         ->first();
+                //     $techInfo2 = DB::table('dap_chinh_ho')
+                //         ->select('cao_trinh_dinh_dap as Cao trình đỉnh đập (m)', 'H_max as H max (m)', 'length as Chiều dài đập (m)')
+                //         ->where('ho_id', '=', $generalInfo->ID)
+                //         ->get();
+
+                //     $techInfo3 = DB::table('cong_va_tran_ho')
+                //         ->select(
+                //             'kich_thuoc_cong as Kích thước cống lấy nước (m)',
+                //             'hinh_thuc_cong as Hình thức cống lấy nước',
+                //             'cao_trinh_nguong_tran as Cao trình ngưỡng tràn (m)',
+                //             'B_tran as B tràn (m)',
+                //             'hinh_thuc_tran as Hình thức tràn',
+                //             'co_tran_su_co as Tràn sự cố'
+                //         )
+                //         ->where('ho_id', '=', $generalInfo->ID)
+                //         ->get();
+
+                //     return  response()->json(compact('generalInfo', 'techInfo1', 'techInfo2', 'techInfo3'));
+                // }
+
+
                 $generalInfo = DB::table('ho_thuy_loi')
-                    ->select(DB::raw("ten as \"Tên\", CONCAT('xã ', vi_tri_xa, ', huyện ', vi_tri_huyen) as \"Vị trí\",
-                     nam_xd as \"Năm xây dựng\", don_vi_ql as \"Đơn vị quản lý\", co_quy_trinh_vh as \"Quy trình vận hành\", id as \"ID\""))
+                    ->select(DB::raw("ten , vi_tri_xa, vi_tri_huyen,
+                 nam_xd , don_vi_ql, co_quy_trinh_vh, id"))
                     ->whereRaw("LOWER(REPLACE(UNACCENT(ten), ' ', '')) = LOWER(REPLACE(?, '_', ''))", [$postData['name']])
                     ->first();
                 if ($generalInfo) {
                     $techInfo1 = DB::table('ho_thuy_loi')
                         ->select(
-                            'f_tuoi_tk as Diện tích tưới thiết kế (ha)',
-                            'f_tuoi_tt as Diện tích tưới thật tế (ha)',
-                            'f_lv as Diện tích lưu vực (km2)',
-                            'wmndb as W mndbt (10^6 m3)',
-                            'mnc as Mực nước chết (m)',
-                            'mndbt as Mực nước dâng bình thường (m)',
-                            'mnlkt as Mực nước lũ thiết kế (m)',
-                            'so_dap_phu as Số đập phụ',
-                            'cao_trinh_dinh_tcs as Cao trình đỉnh tường chắn sóng (m)',
+                            'f_tuoi_tk',
+                            'f_tuoi_tt',
+                            'f_lv',
+                            'wmndb',
+                            'mnc',
+                            'mndbt',
+                            'mnlkt',
+                            'so_dap_phu',
+                            'cao_trinh_dinh_tcs',
                         )
-                        ->where('id', '=', $generalInfo->ID)
+                        ->where('id', '=', $generalInfo->id)
                         ->first();
                     $techInfo2 = DB::table('dap_chinh_ho')
-                        ->select('cao_trinh_dinh_dap as Cao trình đỉnh đập (m)', 'H_max as H max (m)', 'length as Chiều dài đập (m)')
-                        ->where('ho_id', '=', $generalInfo->ID)
+                        ->select('cao_trinh_dinh_dap', 'H_max', 'length')
+                        ->where('ho_id', '=', $generalInfo->id)
                         ->get();
 
                     $techInfo3 = DB::table('cong_va_tran_ho')
                         ->select(
-                            'kich_thuoc_cong as Kích thước cống lấy nước (m)',
-                            'hinh_thuc_cong as Hình thức cống lấy nước',
-                            'cao_trinh_nguong_tran as Cao trình ngưỡng tràn (m)',
-                            'B_tran as B tràn (m)',
-                            'hinh_thuc_tran as Hình thức tràn',
-                            'co_tran_su_co as Tràn sự cố'
+                            'kich_thuoc_cong',
+                            'hinh_thuc_cong',
+                            'cao_trinh_nguong_tran',
+                            'B_tran',
+                            'hinh_thuc_tran',
+                            'co_tran_su_co'
                         )
-                        ->where('ho_id', '=', $generalInfo->ID)
+                        ->where('ho_id', '=', $generalInfo->id)
                         ->get();
 
                     return  response()->json(compact('generalInfo', 'techInfo1', 'techInfo2', 'techInfo3'));
