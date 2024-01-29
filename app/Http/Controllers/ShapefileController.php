@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
@@ -123,12 +124,13 @@ class ShapefileController extends Controller
                         ->where('id', '=', $generalInfo->id)
                         ->first();
                     $techInfo2 = DB::table('dap_chinh_ho')
-                        ->select('cao_trinh_dinh_dap', 'H_max', 'length')
+                        ->select('id', 'cao_trinh_dinh_dap', 'H_max', 'length')
                         ->where('ho_id', '=', $generalInfo->id)
                         ->get();
 
                     $techInfo3 = DB::table('cong_va_tran_ho')
                         ->select(
+                            'id',
                             'kich_thuoc_cong',
                             'hinh_thuc_cong',
                             'cao_trinh_nguong_tran',
@@ -251,10 +253,28 @@ class ShapefileController extends Controller
         }
     }
 
-    public function getFeatureByIdAndLayerTitle(Request $request)
+    public function updateFeatureInfo(Request $request)
     {
         $postData = $request->json()->all();
+        // sleep(2);
+        try {
+            DB::table('ho_thuy_loi')
+                ->where('id', $postData['generalInfo']['id'])
+                ->update($postData['generalInfo'], $postData['techInfo1']);
+            foreach ($postData['techInfo2'] as  $item) {
+                DB::table('dap_chinh_ho')
+                    ->where('id', $item['id'])
+                    ->update($item);
+            }
+            foreach ($postData['techInfo3'] as  $item) {
+                DB::table('cong_va_tran_ho')
+                    ->where('id', $item['id'])
+                    ->update($item);
+            }
+        } catch (Exception $e) {
+            return response()->json(['caution' => $e, 'message' => 'Cập nhật feature không thành công vui lòng thử lại sau.'], 500);
+        }
 
-        return $postData;
+        return response()->json(['message' => 'Cập nhật feature thành công.']);
     }
 }

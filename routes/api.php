@@ -27,6 +27,9 @@ Route::group(['middleware' => 'jwt'], function () {
     Route::post('get-authenticated-user', [UserController::class, 'getAuthenticatedUser']);
 });
 
+Route::group(['middleware' => ['jwt', 'jwt.role:2']], function () {
+    Route::post('update-feature-info', [ShapefileController::class, 'updateFeatureInfo']);
+});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
