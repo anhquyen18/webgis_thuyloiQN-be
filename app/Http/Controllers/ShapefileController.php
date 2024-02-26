@@ -119,13 +119,18 @@ class ShapefileController extends Controller
                             'mndbt',
                             'mnlkt',
                             'so_dap_phu',
-                            'cao_trinh_dinh_tcs',
+                            // 'cao_trinh_dinh_tcs',
                         )
                         ->where('id', '=', $generalInfo->id)
                         ->first();
-                    $techInfo2 = DB::table('dap_chinh_ho')
-                        ->select('id', 'cao_trinh_dinh_dap', 'H_max', 'length')
-                        ->where('ho_id', '=', $generalInfo->id)
+                    // $techInfo2 = DB::table('dap_chinh_ho')
+                    //     ->select('id', 'cao_trinh_dinh_dap', 'h_max', 'length')
+                    //     ->where('ho_id', '=', $generalInfo->id)
+                    //     ->get();
+                    $techInfo2 = DB::table('ho_thuy_loi')
+                        ->join('dap_chinh_ho', 'ho_thuy_loi.id', '=', 'dap_chinh_ho.ho_id')
+                        ->where('ho_id', $generalInfo->id)
+                        ->select('ho_thuy_loi.cao_trinh_dinh_tcs', 'cao_trinh_dinh_dap', 'h_max', DB::raw('LENGTH(dap_chinh_ho) as length'), 'dap_chinh_ho.ho_id', 'dap_chinh_ho.id')
                         ->get();
 
                     $techInfo3 = DB::table('cong_va_tran_ho')
@@ -134,7 +139,7 @@ class ShapefileController extends Controller
                             'kich_thuoc_cong',
                             'hinh_thuc_cong',
                             'cao_trinh_nguong_tran',
-                            'B_tran',
+                            'b_tran',
                             'hinh_thuc_tran',
                             'co_tran_su_co'
                         )
@@ -257,23 +262,25 @@ class ShapefileController extends Controller
     {
         $postData = $request->json()->all();
         // sleep(2);
-        try {
-            DB::table('ho_thuy_loi')
-                ->where('id', $postData['generalInfo']['id'])
-                ->update($postData['generalInfo'], $postData['techInfo1']);
-            foreach ($postData['techInfo2'] as  $item) {
-                DB::table('dap_chinh_ho')
-                    ->where('id', $item['id'])
-                    ->update($item);
-            }
-            foreach ($postData['techInfo3'] as  $item) {
-                DB::table('cong_va_tran_ho')
-                    ->where('id', $item['id'])
-                    ->update($item);
-            }
-        } catch (Exception $e) {
-            return response()->json(['caution' => $e, 'message' => 'Cập nhật feature không thành công vui lòng thử lại sau.'], 500);
+        // return  $postData['generalInfo']['id'];
+        // try {
+
+        DB::table('ho_thuy_loi')
+            ->where('id', $postData['generalInfo']['id'])
+            ->update($postData['generalInfo'], $postData['techInfo1'], $postData['techInfo2'][0]['cao_trinh_dinh_tcs']);
+        foreach ($postData['techInfo2'] as  $item) {
+            DB::table('dap_chinh_ho')
+                ->where('id', $item['id'])
+                ->update(['cao_trinh_dinh_dap' => $item['cao_trinh_dinh_dap'], 'h_max' => $item['h_max'], 'length' => $item['length']]);
         }
+        foreach ($postData['techInfo3'] as  $item) {
+            DB::table('cong_va_tran_ho')
+                ->where('id', $item['id'])
+                ->update($item);
+        }
+        // } catch (Exception $e) {
+        //     return response()->json(['caution' => $e, 'message' => 'Cập nhật feature không thành công vui lòng thử lại sau.'], 500);
+        // }
 
         return response()->json(['message' => 'Cập nhật feature thành công.']);
     }
