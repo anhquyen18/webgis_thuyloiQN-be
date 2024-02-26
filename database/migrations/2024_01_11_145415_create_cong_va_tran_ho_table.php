@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('kich_thuoc_cong')->nullable();
             $table->string('hinh_thuc_cong')->nullable();
             $table->string('cao_trinh_nguong_tran')->nullable();
-            $table->string('B_tran')->nullable();
+            $table->string('b_tran')->nullable();
             $table->string('hinh_thuc_tran')->nullable();
             $table->boolean('co_tran_su_co')->nullable();
         });

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('ho_id')->constrained('ho_thuy_loi');
             $table->string('cao_trinh_dinh_dap')->nullable();
-            $table->double('H_max', 8, 1);
+            $table->double('h_max', 8, 1);
             $table->double('length', 8, 1);
         });
     }
