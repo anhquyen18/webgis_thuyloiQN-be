@@ -263,25 +263,44 @@ class ShapefileController extends Controller
         $postData = $request->json()->all();
         // sleep(2);
         // return  $postData['generalInfo']['id'];
-        // try {
+        try {
 
-        DB::table('ho_thuy_loi')
-            ->where('id', $postData['generalInfo']['id'])
-            ->update($postData['generalInfo'], $postData['techInfo1'], $postData['techInfo2'][0]['cao_trinh_dinh_tcs']);
-        foreach ($postData['techInfo2'] as  $item) {
-            DB::table('dap_chinh_ho')
-                ->where('id', $item['id'])
-                ->update(['cao_trinh_dinh_dap' => $item['cao_trinh_dinh_dap'], 'h_max' => $item['h_max'], 'length' => $item['length']]);
+            DB::table('ho_thuy_loi')
+                ->where('id', $postData['generalInfo']['id'])
+                ->update($postData['generalInfo'], $postData['techInfo1'], $postData['techInfo2'][0]['cao_trinh_dinh_tcs']);
+            foreach ($postData['techInfo2'] as  $item) {
+                DB::table('dap_chinh_ho')
+                    ->where('id', $item['id'])
+                    ->update(['cao_trinh_dinh_dap' => $item['cao_trinh_dinh_dap'], 'h_max' => $item['h_max'], 'length' => $item['length']]);
+            }
+            foreach ($postData['techInfo3'] as  $item) {
+                DB::table('cong_va_tran_ho')
+                    ->where('id', $item['id'])
+                    ->update($item);
+            }
+        } catch (Exception $e) {
+            return response()->json(['caution' => $e, 'message' => 'Cập nhật feature không thành công vui lòng thử lại sau.'], 500);
         }
-        foreach ($postData['techInfo3'] as  $item) {
-            DB::table('cong_va_tran_ho')
-                ->where('id', $item['id'])
-                ->update($item);
-        }
-        // } catch (Exception $e) {
-        //     return response()->json(['caution' => $e, 'message' => 'Cập nhật feature không thành công vui lòng thử lại sau.'], 500);
-        // }
 
         return response()->json(['message' => 'Cập nhật feature thành công.']);
+    }
+
+    public function updateFeatureGeom(Request $request)
+    {
+        $postData = $request->json()->all();
+        try {
+
+            foreach ($postData['modify'] as $feature) {
+                DB::table($feature['layer'])
+                    ->where('gid', $feature['gid'])
+                    ->update(['geom' => $feature['geom']]);
+            }
+        } catch (Exception $e) {
+            return response()->json(['caution' => $e, 'message' => 'Cập nhật feature không thành công vui lòng thử lại sau.'], 500);
+        }
+
+        return response()->json(['message' => 'Cập nhật feature thành công.']);
+
+        // return $postData;
     }
 }
