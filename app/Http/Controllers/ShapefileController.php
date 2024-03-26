@@ -287,19 +287,21 @@ class ShapefileController extends Controller
 
     public function updateFeatureGeom(Request $request)
     {
+        // Gửi những thông tin lên đây
+        // gid sẽ được tạo ở đây và là số tiếp theo trong cột
         $postData = $request->json()->all();
         try {
 
-            foreach ($postData['modify'] as $feature) {
-                DB::table($feature['layer'])
-                    ->where('gid', $feature['gid'])
-                    ->update(['geom' => $feature['geom']]);
-            }
+            // foreach ($postData['modify'] as $feature) {
+            //     DB::table($feature['layer'])
+            //         ->where('gid', $feature['gid'])
+            //         ->update(['geom' => $feature['geom']]);
+            // }
         } catch (Exception $e) {
             return response()->json(['caution' => $e, 'message' => 'Cập nhật feature không thành công vui lòng thử lại sau.'], 500);
         }
 
-        return response()->json(['message' => 'Cập nhật feature thành công.']);
+        return response()->json(['message' => 'Cập nhật feature thành công.', $postData]);
 
         // return $postData;
     }
