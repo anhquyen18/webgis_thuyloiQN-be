@@ -29,8 +29,8 @@ Route::group(['middleware' => 'jwt'], function () {
 
 Route::group(['middleware' => ['jwt', 'jwt.role:2']], function () {
     Route::post('update-feature-info', [ShapefileController::class, 'updateFeatureInfo']);
+    Route::post('update-feature-geom', [ShapefileController::class, 'updateFeatureGeom']);
 });
-Route::post('update-feature-geom', [ShapefileController::class, 'updateFeatureGeom']);
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
