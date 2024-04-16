@@ -36,3 +36,5 @@ Route::group(['middleware' => ['jwt', 'jwt.role:2']], function () {
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('test-somethings', [UserController::class, 'testSomethings']);

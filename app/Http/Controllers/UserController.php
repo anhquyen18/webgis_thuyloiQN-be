@@ -9,6 +9,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Illuminate\Http\Response;
 
+use App\Models\Department;
 
 class UserController extends Controller
 {
@@ -79,7 +80,23 @@ class UserController extends Controller
         return response()->json(compact('user'));
     }
 
-    public function testToken()
+    public function testSomethings()
     {
+        // $postData = $request->json()->all();
+
+        // $url = asset('assets/avatar/cat.png');
+        // return $url;
+        // $path = resource_path('assets/avatar/' . 'cat.png');
+
+        // if (!file_exists($path)) {
+        //     abort(404);
+        // }
+
+        // return response()->file($path);
+        $department = Department::find(3);
+        $policies = $department->policies;
+        // return response()->json(['policies' => $policies]);
+        return $policies;
+        // return response()->json($policies);
     }
 }

@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('reservoir_maintainance', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
+            $table->dateTime('date_finished')->nullable();
+
+            $table->foreignId('reservoir_id')->constrained('reservoirs');
+            $table->foreignId('user_id')->constrained('users');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('reservoir_maintainance', function (Blueprint $table) {
+            $table->dropForeign('reservoir_maintainance_reservoir_id_foreign');
+            $table->dropForeign('reservoir_maintainance_user_id_foreign');
+        });
+        Schema::dropIfExists('reservoir_maintainance');
+    }
+};
