@@ -61,4 +61,21 @@ class User extends Authenticatable implements JWTSubject
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+
+    public function policies()
+    {
+
+        return $this->belongsToMany(Policy::class, 'user_policies');
+    }
 }

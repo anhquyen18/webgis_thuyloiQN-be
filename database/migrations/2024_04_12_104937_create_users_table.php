@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('avatar')->nullable();
             $table->enum('gender', ['Nữ', 'Nam', 'Khác'])->default('Nữ');
             $table->date('birthday')->nullable();
-            $table->integer('phone_number')->nullable();
+            $table->string('phone_number')->nullable();
 
 
 

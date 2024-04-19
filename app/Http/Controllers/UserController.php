@@ -8,11 +8,14 @@ use Illuminate\Support\Arr;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Illuminate\Http\Response;
+use Exception;
 
 use App\Models\Department;
 
 class UserController extends Controller
 {
+
+
     public function login(Request $request)
     {
         $validated = $request->validate([
@@ -33,16 +36,33 @@ class UserController extends Controller
         }
 
         $user = User::select(
-            'id',
-            'name',
-            'username',
-            'department_id',
-            'status_id',
-            'email',
-        )->where('users.username', '=', $credentials['username'])->first();
+            'users.id',
+            'users.name',
+            'users.username',
+            'avatar',
+            'phone_number',
+            'birthday',
+            'gender',
+            'users.department_id',
+            'users.status_id',
+            'users.email',
+            'organizations.name as organization_name',
+            'departments.name as department_name',
+        )
+            ->join('organizations', 'users.organization_id', '=', 'organizations.id')
+            ->join('departments', 'users.department_id', '=', 'departments.id')
+            ->where('users.username', '=', $credentials['username'])->first();
 
-        //Set cookie tạm bằng js
-        return response()->json(compact('token', 'user'));
+        $avatar = '';
+        if ($user['avatar']) {
+            if (strrchr($user['avatar'], ".") === '.jpg')
+                $avatar = 'data:image/jpg;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
+            else if (strrchr($user['avatar'], ".") === '.png')
+                $avatar = 'data:image/png;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
+        }
+
+
+        return response()->json(compact('token', 'user', 'avatar'));
 
         // return response()->cookie('accessToken', $token, 720)->cookie('user', $user, 720);
         // Set cookie từ server nhưng chỉ thấy trên http chứ không thấy trên application
@@ -58,26 +78,73 @@ class UserController extends Controller
     public function getAuthenticatedUser(Request $request)
     {
         $postData = $request->json()->all();
-        $user = auth()->user();
-        // $userData = Arr::except(
-        //     $user,
-        //     [
-        //         'avatar', 'email_verified_at', 'login_at',
-        //         'change_password_at', 'delete_at', 'created_at', 'updated_at',
-        //     ]
-        // );
+        $user = User::select(
+            'users.id',
+            'users.name',
+            'users.username',
+            'avatar',
+            'phone_number',
+            'birthday',
+            'gender',
+            'users.department_id',
+            'users.status_id',
+            'users.email',
+            'organizations.name as organization_name',
+            'departments.name as department_name',
+        )
+            ->join('organizations', 'users.organization_id', '=', 'organizations.id')
+            ->join('departments', 'users.department_id', '=', 'departments.id')
+            ->where('users.id', '=',  auth()->user()->id)->first();
 
-        // if ($data['accountId']) {
-        //     if ($data['accountId'] == $user['id']) {
-        //         return response()->json(compact('user'));
-        //     } else {
-        //         return response()->json([
-        //             'error' => 'Url not found.'
-        //         ], 404);
-        //     }
-        // }
+        $avatar = '';
+        if ($user['avatar'] !== '') {
+            if (strrchr($user['avatar'], ".") === '.jpg')
+                $avatar = 'data:image/jpg;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
+            else if (strrchr($user['avatar'], ".") === '.png')
+                $avatar = 'data:image/png;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
+        }
 
-        return response()->json(compact('user'));
+
+
+        return response()->json(compact('user', 'avatar'));
+    }
+
+    public function updateUserInfo(Request $request, $id)
+    {
+        $postData = $request->json()->all();
+        try {
+            $user = User::find($id);
+            if (!$user)
+                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
+            $user->name = $postData['name'];
+            $user->email = $postData['email'];
+            $user->phone_number = $postData['phone_number'];
+            $user->gender = $postData['gender'];
+            $user->birthday = $postData['birthday'];
+            $user->save();
+
+            return response()->json(['message' => 'Cập nhật hồ sơ người dùng thành công',]);
+        } catch (Exception $e) {
+            // return $e;
+            return response()->json(['caution' => $e, 'message' => 'Cập nhật hồ sơ người dùng không thành công. Vui lòng thử lại sau.'], 500);
+        }
+    }
+
+    public function updateUserPassword(Request $request, $id)
+    {
+        $postData = $request->json()->all();
+        try {
+            $user = User::find($id);
+            if (!$user)
+                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
+            $user->name = $postData['password'];
+            $user->save();
+
+            return response()->json(['message' => 'Cập nhật mật khẩu thành công',]);
+        } catch (Exception $e) {
+            // return $e;
+            return response()->json(['caution' => $e, 'message' => 'Cập nhật mật khẩu không thành công. Vui lòng thử lại sau.'], 500);
+        }
     }
 
     public function testSomethings()
@@ -86,17 +153,34 @@ class UserController extends Controller
 
         // $url = asset('assets/avatar/cat.png');
         // return $url;
-        // $path = resource_path('assets/avatar/' . 'cat.png');
+        // $path = resource_path('assets/avatar/' . 'admin_avatar.jpg');
 
         // if (!file_exists($path)) {
         //     abort(404);
         // }
 
         // return response()->file($path);
-        $department = Department::find(3);
-        $policies = $department->policies;
+        // $department = Department::find(3);
+        // $policies = $department->policies;
         // return response()->json(['policies' => $policies]);
-        return $policies;
+        // return $policies;
         // return response()->json($policies);
+
+
+        // $data = [
+        //     'name' => 'John Doe',
+        //     'email' => 'johndoe@example.com',
+        // ];
+
+        // $image = resource_path('assets/avatar/' . 'admin_avatar.jpg');
+
+        // return response()->json($data)
+        //     ->header('Content-Type', 'application/json; image/jpeg')
+        //     ->setContent($image);
+
+        // return response()->file($image);
+        // ->header('Content-Type', 'application/json; image/jpeg')
+        // ->setContent($image);
+
     }
 }

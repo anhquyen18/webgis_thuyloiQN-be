@@ -25,11 +25,13 @@ Route::post('login', [UserController::class, 'login']);
 
 Route::group(['middleware' => 'jwt'], function () {
     Route::post('get-authenticated-user', [UserController::class, 'getAuthenticatedUser']);
+    Route::put('update-user-info/{id}', [UserController::class, 'updateUserInfo']);
+    Route::put('update-user-password/{id}', [UserController::class, 'updateUserPassword']);
 });
 
 Route::group(['middleware' => ['jwt', 'jwt.role:2']], function () {
     Route::post('update-feature-info', [ShapefileController::class, 'updateFeatureInfo']);
-    Route::post('update-feature-geom', [ShapefileController::class, 'updateFeatureGeom']);
+    Route::put('update-feature-geom', [ShapefileController::class, 'updateFeatureGeom']);
 });
 
 

@@ -22,4 +22,9 @@ class Department extends Model
         return $this->belongsToMany(Policy::class, 'department_policies');
         // return $this->belongsToMany('App\Models\Policy', 'department_policies', 'department_id', 'policy_id')->where('department_id', $this->id);
     }
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }

@@ -32,4 +32,10 @@ class Policy extends Model
         // return $this->belongsToMany(Policy::class);
         return $this->belongsToMany(Department::class, 'department_policies')->withTimestamps(false);
     }
+
+    public function users()
+    {
+
+        return $this->hasMany(User::class);
+    }
 }
