@@ -9,6 +9,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Illuminate\Http\Response;
 use Exception;
+use Illuminate\Support\Facades\Hash;
 
 use App\Models\Department;
 
@@ -130,23 +131,6 @@ class UserController extends Controller
         }
     }
 
-    public function updateUserPassword(Request $request, $id)
-    {
-        $postData = $request->json()->all();
-        try {
-            $user = User::find($id);
-            if (!$user)
-                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
-            $user->name = $postData['password'];
-            $user->save();
-
-            return response()->json(['message' => 'Cập nhật mật khẩu thành công',]);
-        } catch (Exception $e) {
-            // return $e;
-            return response()->json(['caution' => $e, 'message' => 'Cập nhật mật khẩu không thành công. Vui lòng thử lại sau.'], 500);
-        }
-    }
-
     public function uploadUserAvatar(Request $request, $id)
     {
         $request->validate([
@@ -167,6 +151,30 @@ class UserController extends Controller
         } else {
             return response()->json(['message' => 'Cập nhật ảnh đại diện không thành công. Vui lòng thử lại sau.'], 500);
         }
+    }
+
+    public function updateUserPassword(Request $request, $id)
+    {
+        $postData = $request->json()->all();
+
+        try {
+            $user = User::find($id);
+            if (!$user)
+                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
+
+
+            if (Hash::check($postData['currentPass'], $user['password'])) {
+                $user['password'] = Hash::make($postData['checkPass']);
+                $user->save();
+
+                return response()->json(['message' => 'Đổi mật khẩu thành công.']);
+            }
+        } catch (Exception $e) {
+            // return $e;
+            return response()->json(['caution' => $e, 'message' => 'Cập nhật mật khẩu không thành công. Vui lòng thử lại sau.'], 500);
+        }
+
+        return response()->json(['message' => 'Sai mật khẩu.'], 500);
     }
 
     public function testSomethings(Request $request)
