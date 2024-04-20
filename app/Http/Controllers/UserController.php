@@ -147,9 +147,44 @@ class UserController extends Controller
         }
     }
 
-    public function testSomethings()
+    public function uploadUserAvatar(Request $request, $id)
     {
+        $request->validate([
+            'file' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Ảnh có định dạng jpeg, png, jpg hoặc gif, dung lượng tối đa 2MB
+        ]);
+
+        if ($request->has('file')) {
+            $user = User::find($id);
+
+            $file = $request->file('file');
+            $fileName = 'user' . '_' . $id . '_' . 'avatar.jpg';
+            $file->move(resource_path('assets/avatar'),  $fileName);
+            $user->avatar = $fileName;
+            $user->save();
+
+            $avatar = 'data:image/jpg;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $fileName)));
+            return response()->json(['message' => 'Cập nhật ảnh đại diện thành công', 'avatar' => $avatar]);
+        } else {
+            return response()->json(['message' => 'Cập nhật ảnh đại diện không thành công. Vui lòng thử lại sau.'], 500);
+        }
+    }
+
+    public function testSomethings(Request $request)
+    {
+
         // $postData = $request->json()->all();
+        // $request->validate([
+        //     'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Ảnh có định dạng jpeg, png, jpg hoặc gif, dung lượng tối đa 2MB
+        // ]);
+        if ($request->has('file')) {
+            // return  $file;
+
+            $file = $request->file('file');
+            // $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(resource_path('assets/avatar'), 'test.jpg');
+
+            return  'thanh cong';
+        }
 
         // $url = asset('assets/avatar/cat.png');
         // return $url;
@@ -181,6 +216,7 @@ class UserController extends Controller
         // return response()->file($image);
         // ->header('Content-Type', 'application/json; image/jpeg')
         // ->setContent($image);
-
+        // return  $request->has('image');
+        return 'khong thanh cong';
     }
 }

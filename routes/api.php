@@ -27,6 +27,7 @@ Route::group(['middleware' => 'jwt'], function () {
     Route::post('get-authenticated-user', [UserController::class, 'getAuthenticatedUser']);
     Route::put('update-user-info/{id}', [UserController::class, 'updateUserInfo']);
     Route::put('update-user-password/{id}', [UserController::class, 'updateUserPassword']);
+    Route::post('upload-user-avatar/{id}', [UserController::class, 'uploadUserAvatar']);
 });
 
 Route::group(['middleware' => ['jwt', 'jwt.role:2']], function () {
@@ -39,4 +40,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('test-somethings', [UserController::class, 'testSomethings']);
+Route::post('test-somethings', [UserController::class, 'testSomethings']);

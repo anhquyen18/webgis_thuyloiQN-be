@@ -29,13 +29,13 @@ class JwtMiddleware
             }
         } catch (TokenExpiredException $e) {
             // return 'token-1';
-            return response()->json(['caution' => 'Token has expired', 'message' => 'Vui lòng đăng nhập để tiếp tục!'], 401);
+            return response()->json(['caution' => 'Token has expired', 'message' => 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập để tiếp tục!'], 401);
         } catch (TokenInvalidException $e) {
             // return 'token-2';
-            return response()->json(['caution' => 'Invalid token', 'message' => 'Vui lòng đăng nhập để tiếp tục!'], 401);
+            return response()->json(['caution' => 'Invalid token', 'message' => 'Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập để tiếp tục!'], 401);
             // return $e;
         } catch (JWTException $e) {
-            return response()->json(['caution' => 'No token found', 'message' => 'Vui lòng đăng nhập để tiếp tục!'], 401);
+            return response()->json(['caution' => 'No token found', 'message' => 'Không tìm thầy token. Vui lòng đăng nhập để tiếp tục!'], 401);
             // return 'token-3';
         }
 
