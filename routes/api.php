@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ShapefileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,8 @@ Route::group(['middleware' => 'jwt'], function () {
     Route::put('update-user-info/{id}', [UserController::class, 'updateUserInfo']);
     Route::put('update-user-password/{id}', [UserController::class, 'updateUserPassword']);
     Route::post('upload-user-avatar/{id}', [UserController::class, 'uploadUserAvatar']);
+
+    Route::post('organization/{organizationId}/departments', [DepartmentController::class, 'index']);
 });
 
 Route::group(['middleware' => ['jwt', 'jwt.role:2']], function () {

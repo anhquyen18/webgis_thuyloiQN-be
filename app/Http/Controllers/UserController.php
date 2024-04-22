@@ -45,6 +45,7 @@ class UserController extends Controller
             'birthday',
             'gender',
             'users.department_id',
+            'users.organization_id',
             'users.status_id',
             'users.email',
             'organizations.name as organization_name',
@@ -88,6 +89,7 @@ class UserController extends Controller
             'birthday',
             'gender',
             'users.department_id',
+            'users.organization_id',
             'users.status_id',
             'users.email',
             'organizations.name as organization_name',
@@ -181,50 +183,6 @@ class UserController extends Controller
     {
 
         // $postData = $request->json()->all();
-        // $request->validate([
-        //     'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Ảnh có định dạng jpeg, png, jpg hoặc gif, dung lượng tối đa 2MB
-        // ]);
-        if ($request->has('file')) {
-            // return  $file;
 
-            $file = $request->file('file');
-            // $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(resource_path('assets/avatar'), 'test.jpg');
-
-            return  'thanh cong';
-        }
-
-        // $url = asset('assets/avatar/cat.png');
-        // return $url;
-        // $path = resource_path('assets/avatar/' . 'admin_avatar.jpg');
-
-        // if (!file_exists($path)) {
-        //     abort(404);
-        // }
-
-        // return response()->file($path);
-        // $department = Department::find(3);
-        // $policies = $department->policies;
-        // return response()->json(['policies' => $policies]);
-        // return $policies;
-        // return response()->json($policies);
-
-
-        // $data = [
-        //     'name' => 'John Doe',
-        //     'email' => 'johndoe@example.com',
-        // ];
-
-        // $image = resource_path('assets/avatar/' . 'admin_avatar.jpg');
-
-        // return response()->json($data)
-        //     ->header('Content-Type', 'application/json; image/jpeg')
-        //     ->setContent($image);
-
-        // return response()->file($image);
-        // ->header('Content-Type', 'application/json; image/jpeg')
-        // ->setContent($image);
-        // return  $request->has('image');
-        return 'khong thanh cong';
     }
 }
