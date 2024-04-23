@@ -11,12 +11,34 @@ class DepartmentController extends Controller
     public function index($organizationId)
     {
         $user = User::find(auth()->user()->id);
+        $userPolicies = $user->policies()->where('policy_id', 2)->first();
+        $departmentPolicies = Department::find($user->department_id)->policies()->where('policy_id', 2)->first();
+        $allAccess = false;
 
-        if ($organizationId === 'user-organization-id') {
-            return Department::where('organization_id', $user->organization_id)->get();
+        if ($userPolicies || $departmentPolicies) {
+            // Kiểm tra xem có "Toàn quyền quản lí các tổ chức" không
+            $organizationId = 'all';
+            $allAccess = true;
+        }
+
+        if ($organizationId === 'all') {
+            return response()->json(['allAccess' => $allAccess, 'departments'
+            =>  Department::select(
+                'departments.name as name',
+                'departments.created_at',
+                'organizations.name as organization_name'
+            )->withCount('users')->withCount('policies')
+                ->leftJoin('organizations', 'departments.organization_id', '=', 'organizations.id')->get()]);
         } else {
-
-            return Department::where('organization_id', $organizationId)->get();
+            return response()->json(['allAccess' => $allAccess, 'departments'
+            => Department::select(
+                'departments.name as name',
+                'departments.created_at',
+                'organizations.name as organization_name'
+            )
+                ->leftJoin('organizations', 'departments.organization_id', '=', 'organizations.id')
+                ->where('organization_id', $organizationId)
+                ->withCount('users')->withCount('policies')->get()]);
         }
     }
 }
