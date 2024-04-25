@@ -179,6 +179,16 @@ class UserController extends Controller
         return response()->json(['message' => 'Sai mật khẩu.'], 500);
     }
 
+    public function getNoDepartmentUser(Request $request)
+    {
+        $postData = $request->json()->all();
+
+        // $users = User::select('id', 'name', 'created_at')->where('department_id', null)->paginate($postData['pageSize']);
+        $users = User::select('id', 'name', 'created_at')->where('department_id', null)->get();
+        return response()->json(['users' => $users]);
+    }
+
+
     public function testSomethings(Request $request)
     {
 

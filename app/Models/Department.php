@@ -14,6 +14,7 @@ class Department extends Model
     protected $fillable = [
         'name',
         'description',
+        'organization_id',
     ];
 
     public function policies()
