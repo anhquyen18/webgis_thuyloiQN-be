@@ -51,11 +51,16 @@ class UserController extends Controller
             'organizations.name as organization_name',
             'departments.name as department_name',
         )
-            ->join('organizations', 'users.organization_id', '=', 'organizations.id')
-            ->join('departments', 'users.department_id', '=', 'departments.id')
+            ->leftJoin('organizations', 'users.organization_id', '=', 'organizations.id')
+            ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
             ->where('users.username', '=', $credentials['username'])->first();
 
+        if (!$user) {
+            return response()->json(['message' => 'Không tìm thấy người dùng. Vui lòng thử lại sau.'], 500);
+        }
+
         $avatar = '';
+        $policies = [];
         if ($user['avatar']) {
             if (strrchr($user['avatar'], ".") === '.jpg')
                 $avatar = 'data:image/jpg;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
@@ -63,8 +68,14 @@ class UserController extends Controller
                 $avatar = 'data:image/png;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
         }
 
+        $userPolicies = $user->policies;
+        $department = Department::find($user->department_id);
 
-        return response()->json(compact('token', 'user', 'avatar'));
+        if ($department) {
+            $policies = $userPolicies->merge($department->policies);
+        }
+
+        return response()->json(compact('token', 'user', 'avatar', 'policies'));
 
         // return response()->cookie('accessToken', $token, 720)->cookie('user', $user, 720);
         // Set cookie từ server nhưng chỉ thấy trên http chứ không thấy trên application
@@ -99,6 +110,17 @@ class UserController extends Controller
             ->join('departments', 'users.department_id', '=', 'departments.id')
             ->where('users.id', '=',  auth()->user()->id)->first();
 
+        if (!$user) {
+            return response()->json(['message' => 'Không tìm thấy người dùng. Vui lòng thử lại sau.'], 500);
+        }
+
+        $userPolicies = $user->policies;
+        $department = Department::find($user->department_id);
+
+        if ($department) {
+            $policies = $userPolicies->merge($department->policies);
+        }
+
         $avatar = '';
         if ($user['avatar'] !== '') {
             if (strrchr($user['avatar'], ".") === '.jpg')
@@ -108,8 +130,7 @@ class UserController extends Controller
         }
 
 
-
-        return response()->json(compact('user', 'avatar'));
+        return response()->json(compact('user', 'avatar', 'policies'));
     }
 
     public function updateUserInfo(Request $request, $id)
