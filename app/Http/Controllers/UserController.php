@@ -74,8 +74,10 @@ class UserController extends Controller
         if ($department) {
             $policies = $userPolicies->merge($department->policies);
         }
+        $user->policies = $policies;
+        $user->avatar_base64 = $avatar;
 
-        return response()->json(compact('token', 'user', 'avatar', 'policies'));
+        return response()->json(compact('token', 'user'));
 
         // return response()->cookie('accessToken', $token, 720)->cookie('user', $user, 720);
         // Set cookie từ server nhưng chỉ thấy trên http chứ không thấy trên application
@@ -129,8 +131,19 @@ class UserController extends Controller
                 $avatar = 'data:image/png;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
         }
 
+        $userPolicies = $user->policies;
+        $department = Department::find($user->department_id);
 
-        return response()->json(compact('user', 'avatar', 'policies'));
+        if ($department) {
+            $policies = $userPolicies->merge($department->policies);
+        }
+
+        $user->policies = $policies;
+        $user->avatar_base64 = $avatar;
+
+
+
+        return response()->json(compact('user'));
     }
 
     public function updateUserInfo(Request $request, $id)
