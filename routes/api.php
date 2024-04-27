@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PolicyController;
+use App\Models\Department;
 use App\Models\Organization;
 use App\Models\Policy;
 
@@ -36,6 +37,8 @@ Route::group(['middleware' => 'jwt'], function () {
     Route::put('update-user-info/{id}', [UserController::class, 'updateUserInfo']);
     Route::put('update-user-password/{id}', [UserController::class, 'updateUserPassword']);
     Route::post('upload-user-avatar/{id}', [UserController::class, 'uploadUserAvatar']);
+
+    Route::get('/departments/{id}', [DepartmentController::class, 'getDepartment']);
 });
 
 
@@ -45,6 +48,7 @@ Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganization:1,2']], funct
     Route::get('organization/{organizationId}/departments', [DepartmentController::class, 'index']);
     Route::post('departments/create', [DepartmentController::class, 'create']);
     Route::delete('departments/delete', [DepartmentController::class, 'delete']);
+    Route::put('departments/{departmentId}/update-info', [DepartmentController::class, 'updateInfo']);
 
     Route::get('get-policies', [PolicyController::class, 'index']);
 });

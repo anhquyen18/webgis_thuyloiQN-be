@@ -74,7 +74,7 @@ class UserController extends Controller
         if ($department) {
             $policies = $userPolicies->merge($department->policies);
         }
-        $user->policies = $policies;
+        $user->allPolicies = $policies;
         $user->avatar_base64 = $avatar;
 
         return response()->json(compact('token', 'user'));
@@ -108,8 +108,8 @@ class UserController extends Controller
             'organizations.name as organization_name',
             'departments.name as department_name',
         )
-            ->join('organizations', 'users.organization_id', '=', 'organizations.id')
-            ->join('departments', 'users.department_id', '=', 'departments.id')
+            ->leftJoin('organizations', 'users.organization_id', '=', 'organizations.id')
+            ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
             ->where('users.id', '=',  auth()->user()->id)->first();
 
         if (!$user) {
@@ -124,6 +124,7 @@ class UserController extends Controller
         }
 
         $avatar = '';
+        $policies = [];
         if ($user['avatar'] !== '') {
             if (strrchr($user['avatar'], ".") === '.jpg')
                 $avatar = 'data:image/jpg;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
@@ -138,7 +139,7 @@ class UserController extends Controller
             $policies = $userPolicies->merge($department->policies);
         }
 
-        $user->policies = $policies;
+        $user->allPolicies = $policies;
         $user->avatar_base64 = $avatar;
 
 

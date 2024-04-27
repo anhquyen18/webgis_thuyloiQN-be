@@ -53,6 +53,9 @@ class DepartmentController extends Controller
 
     public function create(Request $request)
     {
+        // Nếu có gán quyền quản lí tổ chức cho department
+        // mà department không thuộc tổ chức nào thì vẫn được phép gán.
+
         $postData = $request->json()->all();
         $fullAccessOrganizations = $request->attributes->get('full_access_organizations');
         $user = auth()->user();
@@ -98,6 +101,7 @@ class DepartmentController extends Controller
 
     public function delete(Request $request)
     {
+
         $fullAccessOrganizations = $request->attributes->get('full_access_organizations');
         $user = auth()->user();
 
@@ -113,10 +117,55 @@ class DepartmentController extends Controller
                 }
             }
         } catch (Exception $e) {
-            return $e;
-            // return response()->json(['caution' => $e, 'message' => 'Xoá thất bại. Vui lòng thử lại sau!'], 500);
+            // return $e;
+            return response()->json(['caution' => $e, 'message' => 'Xoá thất bại. Vui lòng thử lại sau!'], 500);
         }
 
         return response()->json(['message' => 'Xoá phòng ban thành công!']);
+    }
+
+    public function getDepartment(Request $request, $departmentId)
+    {
+
+        try {
+            $department = Department::find($departmentId);
+            if (!$department)
+                return response()->json(['message' => 'Không tìm thấy phòng ban.'], 500);
+        } catch (Exception $e) {
+            return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
+        }
+        $department->policies;
+        $department->users =  $department->users()->select('id', 'name', 'email', 'created_at')->get();
+
+        return response()->json(['department' => $department, 'message' => 'Yêu cầu thành công!']);
+    }
+
+    public function updateInfo(Request $request, $departmentId)
+    {
+        // Khi cập nhật bằng quyền quản lí tổ chức (policy 1) thì tổ chức của user phải trùng
+        // với tổ chức của department mới cho các thao tác tiếp theo
+        // Tác động đến các user khác cũng thế, đều phải nằm trong cùng tổ chức nếu chỉ có "policy 1"
+        $postData = $request->json()->all();
+        $fullAccessOrganizations = $request->attributes->get('full_access_organizations');
+        $user = auth()->user();
+
+
+        try {
+            $department = Department::find($departmentId);
+            if (!$department)
+                return response()->json(['message' => 'Không tìm thấy phòng ban.'], 500);
+
+            if (!$fullAccessOrganizations && !$department['organization_id'] == $user['organization_id']) {
+                return response()->json(['message' => 'Phòng ban không thuộc quyền quản lí của người dùng.'], 500);
+            }
+
+            $department->name = $postData['name'];
+            $department->description = $postData['description'];
+            $department->save();
+        } catch (Exception $e) {
+            return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
+        }
+
+        return $postData;
     }
 }
