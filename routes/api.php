@@ -49,8 +49,14 @@ Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganization:1,2']], funct
     Route::post('departments/create', [DepartmentController::class, 'create']);
     Route::delete('departments/delete', [DepartmentController::class, 'delete']);
     Route::put('departments/{departmentId}/update-info', [DepartmentController::class, 'updateInfo']);
+    Route::put('departments/{departmentId}/add-users', [DepartmentController::class, 'addUsers']);
+    Route::put('departments/{departmentId}/remove-users', [DepartmentController::class, 'removeUsers']);
+    Route::post('departments/{departmentId}/add-policies', [DepartmentController::class, 'addPolicies']);
+    Route::delete('departments/{departmentId}/remove-policies', [DepartmentController::class, 'removePolicies']);
 
     Route::get('get-policies', [PolicyController::class, 'index']);
+
+    Route::get('departments/{departmentId}/get-policies-not-in-department', [PolicyController::class, 'getPoliciesNotInDepartment']);
 });
 
 Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganizations:2']], function () {

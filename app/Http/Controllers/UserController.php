@@ -60,7 +60,6 @@ class UserController extends Controller
         }
 
         $avatar = '';
-        $policies = [];
         if ($user['avatar']) {
             if (strrchr($user['avatar'], ".") === '.jpg')
                 $avatar = 'data:image/jpg;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
@@ -68,12 +67,13 @@ class UserController extends Controller
                 $avatar = 'data:image/png;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
         }
 
-        $userPolicies = $user->policies;
-        $department = Department::find($user->department_id);
+        $policies = $user->policies;
 
+        $department = Department::find($user->department_id);
         if ($department) {
-            $policies = $userPolicies->merge($department->policies);
+            $policies = $policies->merge($department->policies);
         }
+
         $user->allPolicies = $policies;
         $user->avatar_base64 = $avatar;
 
@@ -116,27 +116,21 @@ class UserController extends Controller
             return response()->json(['message' => 'Không tìm thấy người dùng. Vui lòng thử lại sau.'], 500);
         }
 
-        $userPolicies = $user->policies;
-        $department = Department::find($user->department_id);
 
-        if ($department) {
-            $policies = $userPolicies->merge($department->policies);
-        }
 
         $avatar = '';
-        $policies = [];
         if ($user['avatar'] !== '') {
             if (strrchr($user['avatar'], ".") === '.jpg')
                 $avatar = 'data:image/jpg;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
             else if (strrchr($user['avatar'], ".") === '.png')
                 $avatar = 'data:image/png;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
-        }
+        };
 
-        $userPolicies = $user->policies;
+        $policies = $user->policies;
+
         $department = Department::find($user->department_id);
-
         if ($department) {
-            $policies = $userPolicies->merge($department->policies);
+            $policies = $policies->merge($department->policies);
         }
 
         $user->allPolicies = $policies;

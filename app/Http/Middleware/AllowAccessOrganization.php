@@ -16,39 +16,36 @@ class AllowAccessOrganization
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
+
+    // Quyền "Quản lí toàn bộ tổ chức" và quyền "Quản lí tổ chức"
     public function handle(Request $request, Closure $next, ...$policies): Response
     {
         $user = auth()->user();
         $department = Department::find($user->department_id);
         $userPolicies = $user->policies->pluck('id')->toArray();
-        $departmentPolicies =  $department->policies()->pluck('id')->toArray();
         // Kiểm tra xem có quyền hạn cần thiết không
         $allowUser = count(array_intersect($policies, $userPolicies)) > 0;
-        $allowDepartment = count(array_intersect($policies, $departmentPolicies)) > 0;
-
-
-        // return response()->json(['caution' => $allowUser]); 
-        // $user = User::find(auth()->user()->id);
-        // $userPolicies = $user->policies()->where('policy_id', $policies[0])->first();
-
-
-
-        // $departmentPolicies = Department::find($user->department_id)->policies()->where('policy_id', $policies[0])->first();
+        $allowDepartment = false;
+        if ($department && $department->policies != null) {
+            $departmentPolicies =  $department->policies->pluck('id')->toArray();
+            $allowDepartment = count(array_intersect($policies, $departmentPolicies)) > 0;
+        }
 
         if ($allowUser || $allowDepartment) {
             // Kiểm tra xem user có toàn quyền truy cập tất cả các tổ chức không
             $fullAccessUser = $user->policies->contains('id', $policies[1]);
-            $fullAccessDepartment = $department->policies->contains('id', $policies[1]);
+            if ($department && $department->policies != null) {
+                $fullAccessDepartment = $department->policies->contains('id', $policies[1]);
+            }
             $fullAccess = false;
             if ($fullAccessUser || $fullAccessDepartment) {
                 $fullAccess = true;
             }
+
             $request->attributes->set('full_access_organizations', $fullAccess);
             return $next($request);
         }
 
-        // return response()->json(['caution' => 'Unauthorized', 'error' => 'You are not authorized to perform this action, please contact admin!'], 403);
-        // return response()->json(['caution' => $user['department_id'], 'error' => $role], 403);
         return response()->json(['caution' => 'Unauthorized', 'message' => 'Bạn không đủ thẩm quyền để thực hiện điều này'], 403);
     }
 }

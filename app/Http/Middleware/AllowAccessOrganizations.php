@@ -17,11 +17,15 @@ class AllowAccessOrganizations
      */
     public function handle(Request $request, Closure $next, ...$policies): Response
     {
-        // Quyền truy cập toàn bộ các tổ chức hiện có
-
+        // Quyền "Toàn quyền quản lí các tổ chức"
         $user = User::find(auth()->user()->id);
         $userPolicies = $user->policies()->where('policy_id', $policies[0])->first();
-        $departmentPolicies = Department::find($user->department_id)->policies()->where('policy_id', $policies[0])->first();
+
+        $departmentPolicies = false;
+        $department = Department::find($user->department_id);
+        if ($department && $department->policies != null) {
+            $departmentPolicies = $department->policies()->where('policy_id', $policies[0])->first();
+        }
 
         if ($userPolicies || $departmentPolicies) {
             return $next($request);
