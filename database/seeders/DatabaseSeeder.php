@@ -3,7 +3,10 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+use App\Models\DepartmentPolicy;
 use Illuminate\Database\Seeder;
+use League\CommonMark\Node\Block\Document;
 
 class DatabaseSeeder extends Seeder
 {
@@ -12,17 +15,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
-        $this->call([
-            // DepartmentsSeeder::class,
-            // UserStatusSeeder::class,
-            UserSeeder::class,
-        ]);
+        $this->call(UserStatusSeeder::class);
+        $this->call(DepartmentsSeeder::class);
+        $this->call(PoliciesSeeder::class);
+        $this->call(DepartmentPolicySeeder::class);
+        $this->call(OrganizationsSeeder::class);
+        $this->call(UserActionSeeder::class);
+        $this->call(ObjectActivityTypeSeeder::class);
+        $this->call(DocumentTypeSeeder::class);
     }
 }
