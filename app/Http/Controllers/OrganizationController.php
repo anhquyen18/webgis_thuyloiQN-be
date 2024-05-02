@@ -11,10 +11,8 @@ class OrganizationController extends Controller
 {
     public function index(Request $request)
     {
-        $accessOrganizations = true;
         return response()->json([
-            'accessOrganizations' => $accessOrganizations,
-            'organizations' => Organization::select('id', 'name')->get()
+            'organizations' => Organization::select('id', 'name')->with('departments')->get()
         ]);
         // return Organization::select('id', 'name')->all();
         // $user = User::find(auth()->user()->id);

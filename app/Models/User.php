@@ -69,7 +69,7 @@ class User extends Authenticatable implements JWTSubject
 
     public function department()
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(Department::class);
     }
 
 
