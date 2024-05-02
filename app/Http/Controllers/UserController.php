@@ -10,8 +10,10 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 use Illuminate\Http\Response;
 use Exception;
 use Illuminate\Support\Facades\Hash;
-
+use App\Models\Policy;
+use Illuminate\Support\Facades\DB;
 use App\Models\Department;
+use SebastianBergmann\Type\VoidType;
 
 class UserController extends Controller
 {
@@ -141,6 +143,18 @@ class UserController extends Controller
         return response()->json(compact('user'));
     }
 
+    function updateUserPersonalInfo($user, $data)
+    {
+        $user->name =  $data['name'];
+        $user->email =  $data['email'];
+        $user->phone_number =  $data['phone_number'];
+        $user->gender =  $data['gender'];
+        $user->birthday = $data['birthday'];
+        $user->save();
+
+        return "Cập nhật thôn tin cá nhân người dùng thành công";
+    }
+
     public function updateUserInfo(Request $request, $id)
     {
         $postData = $request->json()->all();
@@ -148,18 +162,74 @@ class UserController extends Controller
             $user = User::find($id);
             if (!$user)
                 return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
-            $user->name = $postData['name'];
-            $user->email = $postData['email'];
-            $user->phone_number = $postData['phone_number'];
-            $user->gender = $postData['gender'];
-            $user->birthday = $postData['birthday'];
-            $user->save();
+
+            $this->updateUserPersonalInfo($user, $postData);
+
 
             return response()->json(['message' => 'Cập nhật hồ sơ người dùng thành công',]);
         } catch (Exception $e) {
             // return $e;
             return response()->json(['caution' => $e, 'message' => 'Cập nhật hồ sơ người dùng không thành công. Vui lòng thử lại sau.'], 500);
         }
+    }
+
+    public function updateUserProfile(Request $request, $id)
+    {
+        $fullAccessOrganizations = $request->attributes->get('full_access_organizations');
+        $postData = $request->json()->all();
+        $myUser = auth()->user();
+
+        // "Toàn quyền truy cập các tổ chức"
+        $allAccessOrganizationsPolicy = 2;
+
+        try {
+
+            $requestedUser = User::find($id);
+            if (!$requestedUser)
+                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
+
+            if (!$fullAccessOrganizations) {
+                if ($myUser['organization_id'] != $requestedUser['organization_id']) {
+                    return response()->json(['message' => 'Phòng ban không thuộc quyền quản lí của người dùng.'], 500);
+                }
+
+                // Quyền hạn được gán thêm có chứa quyền hạn cao hơn người dùng hiện có thì không được.
+                if (
+                    in_array($allAccessOrganizationsPolicy, $postData['addPolicies'])
+                    || in_array($allAccessOrganizationsPolicy, $postData['removePolicies'])
+                ) {
+                    return response()->json(['message' => 'Quyền hạn không phù hợp.'], 500);
+                }
+            }
+
+            $addPolicyData = [];
+            foreach ($postData['addPolicies'] as $policy) {
+                $addPolicyData[] = [
+                    'user_id' => $requestedUser->id,
+                    'policy_id' => $policy,
+                ];
+            }
+
+            $removePolicyData = [];
+            foreach ($postData['removePolicies'] as $policy) {
+                $removePolicyData[] = [
+                    'user_id' => $requestedUser->id,
+                    'policy_id' => $policy,
+                ];
+            }
+
+            $this->updateUserPersonalInfo($requestedUser, $postData);
+            DB::table('user_policies')->insert($addPolicyData);
+            $policies = DB::table('user_policies')
+                ->where('user_id',  $requestedUser->id)
+                ->whereIn('policy_id', $postData['removePolicies'])->delete();
+        } catch (Exception $e) {
+            // return $e;
+            return response()->json(['caution' => $e, 'message' => 'Cập nhật hồ sơ người dùng không thành công. Vui lòng thử lại sau.'], 500);
+        }
+
+
+        return response()->json(['message' => 'Cập nhật hồ sơ người dùng thành công',]);
     }
 
     public function uploadUserAvatar(Request $request, $id)
@@ -215,6 +285,69 @@ class UserController extends Controller
         // $users = User::select('id', 'name', 'created_at')->where('department_id', null)->paginate($postData['pageSize']);
         $users = User::select('id', 'name', 'created_at')->where('department_id', null)->get();
         return response()->json(['users' => $users]);
+    }
+
+    public function getUsers(Request $request)
+    {
+        $fullAccessOrganizations = $request->attributes->get('full_access_organizations');
+        $user = auth()->user();
+
+        try {
+            $users = $users = User::with('department', 'organization')->select('id', 'name', 'username', 'created_at', 'department_id', 'organization_id')->get();
+            $policies = Policy::all();
+            if (!$fullAccessOrganizations) {
+                // User không có quyền "Truy cập các tổ chức" thì chỉ lấy được user trong tổ chức của chính user
+                if ($user['organization_id'] != null) {
+                    $users = User::with('department', 'organization')
+                        ->select('id', 'name', 'username', 'created_at', 'department_id', 'organization_id')
+                        ->where('organization_id', $user['organization_id'])->get();
+                } else {
+                    $users = null;
+                }
+            }
+        } catch (Exception $e) {
+            return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
+        }
+
+        return response()->json(['users' => $users, 'message' => 'Yêu cầu thành công.']);
+    }
+
+    public function getUserById(Request $request, $id)
+    {
+        $fullAccessOrganizations = $request->attributes->get('full_access_organizations');
+        $myUser = auth()->user();
+
+        try {
+            $requestedUser = User::with('policies')->find($id);
+
+            if (!$requestedUser)
+                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
+
+            $userPolicies = $requestedUser->policies()->pluck('policy_id');
+            $policies = Policy::all();
+            $allAccessOrganizationsPolicy = 2;
+
+            if (!$fullAccessOrganizations) {
+                // User không có quyền "Truy cập các tổ chức" thì chỉ lấy được user trong tổ chức của chính user
+                $policies = Policy::whereNot('id', $allAccessOrganizationsPolicy)->get();
+
+                if ($myUser['organization_id'] == null || $myUser['organization_id'] != $requestedUser['organization_id']) {
+                    return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
+                }
+            }
+
+            $otherPolicies = $policies->reject(function ($policy) use ($userPolicies) {
+                return $userPolicies->contains($policy->id);
+            });
+
+            $requestedUser->noPolicies = $otherPolicies->values()->all();
+        } catch (Exception $e) {
+
+            return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
+        }
+
+
+        return response()->json(['user' => $requestedUser, 'message' => 'Yêu cầu thành công.']);
     }
 
 

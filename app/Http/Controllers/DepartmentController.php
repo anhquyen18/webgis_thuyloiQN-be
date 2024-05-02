@@ -341,4 +341,11 @@ class DepartmentController extends Controller
 
         return response()->json(['message' => 'Xoá quyền hạn thành công.']);
     }
+
+    public function getNoOrganizationDepartments()
+    {
+        return response()->json([
+            'departments' => Department::select('id', 'name')->where('organization_id', null)->get()
+        ]);
+    }
 }

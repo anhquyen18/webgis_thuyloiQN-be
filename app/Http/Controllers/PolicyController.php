@@ -53,7 +53,6 @@ class PolicyController extends Controller
         } catch (Exception $e) {
             return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
         }
-
         return response()->json(['policies' => $policies, 'message' => 'Yêu cầu thành công.']);
     }
 }

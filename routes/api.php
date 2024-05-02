@@ -10,6 +10,7 @@ use App\Http\Controllers\PolicyController;
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\Policy;
+use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,12 +56,17 @@ Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganization:1,2']], funct
     Route::delete('departments/{departmentId}/remove-policies', [DepartmentController::class, 'removePolicies']);
 
     Route::get('get-policies', [PolicyController::class, 'index']);
-
     Route::get('departments/{departmentId}/get-policies-not-in-department', [PolicyController::class, 'getPoliciesNotInDepartment']);
+
+    Route::get('/get-users', [UserController::class, 'getUsers']);
+
+    Route::get('/get-user-by-id/{id}', [UserController::class, 'getUserById']);
+    Route::put('/users/update-user-profile/{id}', [UserController::class, 'updateUserProfile']);
 });
 
 Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganizations:2']], function () {
     Route::get('get-organizations', [OrganizationController::class, 'index']);
+    Route::get('get-no-organization-departments', [DepartmentController::class, 'getNoOrganizationDepartments']);
 });
 
 
