@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PolicyController;
+use App\Http\Controllers\ReservoirController;
+use App\Http\Controllers\ReservoirSafetyController;
+
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\Policy;
@@ -76,9 +79,7 @@ Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganizations:2']], functi
 //     Route::put('update-feature-geom', [ShapefileController::class, 'updateFeatureGeom']);
 // });
 
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
 Route::post('test-somethings', [UserController::class, 'testSomethings']);
+
+Route::get('reservoirs/{id}/constructions', [ReservoirController::class, 'getConstructions']);
+Route::post('reservoirs/{id}/safety-report', [ReservoirSafetyController::class, 'createSafetyReport']);
