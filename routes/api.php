@@ -72,6 +72,14 @@ Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganizations:2']], functi
     Route::get('get-no-organization-departments', [DepartmentController::class, 'getNoOrganizationDepartments']);
 });
 
+// Những quyền có thể tạo và chỉnh sửa các báo cáo
+$fullAccessReports = 'jwt.FullAccessReports:' . '6,8,10';
+Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganizations:2']], function () {
+    Route::post('upload-temporary-image', [ReservoirSafetyController::class, 'uploadTemporaryImage']);
+    Route::delete('delete-temporary-image', [ReservoirSafetyController::class, 'deleteTemporaryImage']);
+    Route::post('reservoirs/{id}/safety-report', [ReservoirSafetyController::class, 'createSafetyReport']);
+});
+
 
 
 // Route::group(['middleware' => ['jwt', 'jwt.role:2']], function () {
@@ -82,4 +90,3 @@ Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganizations:2']], functi
 Route::post('test-somethings', [UserController::class, 'testSomethings']);
 
 Route::get('reservoirs/{id}/constructions', [ReservoirController::class, 'getConstructions']);
-Route::post('reservoirs/{id}/safety-report', [ReservoirSafetyController::class, 'createSafetyReport']);
