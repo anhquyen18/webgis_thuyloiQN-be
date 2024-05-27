@@ -16,10 +16,16 @@ class ReservoirSafetyFactory extends Factory
      */
     public function definition(): array
     {
+        $finished_status = fake()->boolean();
+        if ($finished_status)
+            $date_finished = fake()->dateTimeThisYear();
+        else
+            $date_finished = null;
         return [
             'name' => fake()->unique()->name(),
             'created_at' => fake()->dateTimeInInterval('-5 years'),
-            'date_finished' => fake()->dateTimeThisYear(),
+            'date_finished' => $date_finished,
+            'finished_status' => $finished_status,
             'reservoir_id' => fake()->numberBetween(1, 30),
             'user_id' => fake()->numberBetween(1, 10),
             'main_dam_status' => fake()->boolean(),
