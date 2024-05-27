@@ -5,6 +5,7 @@ namespace Database\Seeders;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 use App\Models\DepartmentPolicy;
+use App\Models\Reservoir;
 use Illuminate\Database\Seeder;
 use League\CommonMark\Node\Block\Document;
 
@@ -23,5 +24,7 @@ class DatabaseSeeder extends Seeder
         $this->call(UserActionSeeder::class);
         $this->call(ObjectActivityTypeSeeder::class);
         $this->call(DocumentTypeSeeder::class);
+        $this->call(ReservoirSeeder::class);
+        $this->call(ReservoirSafetySeeder::class);
     }
 }
