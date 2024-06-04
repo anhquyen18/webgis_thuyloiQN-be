@@ -73,12 +73,26 @@ Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganizations:2']], functi
 });
 
 // Những quyền có thể tạo và chỉnh sửa các báo cáo
-$fullAccessReports = 'jwt.FullAccessReports:' . '6,8,10';
-Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganizations:2']], function () {
+$fullAccessReports = 'jwt.AcceptedPolicies:' . '6,8,10';
+Route::group(['middleware' => ['jwt', $fullAccessReports]], function () {
     Route::post('upload-temporary-image', [ReservoirSafetyController::class, 'uploadTemporaryImage']);
     Route::delete('delete-temporary-image', [ReservoirSafetyController::class, 'deleteTemporaryImage']);
     Route::post('reservoirs/{id}/safety-report', [ReservoirSafetyController::class, 'createSafetyReport']);
+    Route::get('reservoirs/index', [ReservoirController::class, 'index']);
+    Route::get('reservoirs/{id}/info', [ReservoirController::class, 'getReservoir']);
 });
+
+// Quyền có thể đọc các báo cáo an toàn
+$readOnlySafetyReports = 'jwt.AcceptedPolicies:' . '9,10';
+Route::group(['middleware' => ['jwt', $readOnlySafetyReports]], function () {
+    Route::get('reservoirs/safety-reports', [ReservoirSafetyController::class, 'index']);
+});
+// Toàn quyền với các báo cáo an toàn
+$fullAccessSafetyReports = 'jwt.AcceptedPolicies:' . '10';
+Route::group(['middleware' => ['jwt', $readOnlySafetyReports]], function () {
+    Route::delete('reservoirs/safety-reports/delete', [ReservoirSafetyController::class, 'deleteSafetyReports']);
+});
+
 
 
 
@@ -88,5 +102,3 @@ Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganizations:2']], functi
 // });
 
 Route::post('test-somethings', [UserController::class, 'testSomethings']);
-
-Route::get('reservoirs/{id}/constructions', [ReservoirController::class, 'getConstructions']);

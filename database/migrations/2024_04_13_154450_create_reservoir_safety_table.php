@@ -26,8 +26,8 @@ return new class extends Migration
             $table->string('main_dam_description')->nullable();
             $table->boolean('spillway_status')->nullable();
             $table->string('spillway_description')->nullable();
-            $table->boolean('mornitor_system_status')->nullable();
-            $table->string('mornitor_system_description')->nullable();
+            $table->boolean('monitor_system_status')->nullable();
+            $table->string('monitor_system_description')->nullable();
         });
     }
 

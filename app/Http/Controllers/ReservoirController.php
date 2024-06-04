@@ -2,14 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Reservoir;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\DB;
 
 use Exception;
 
 class ReservoirController extends Controller
 {
-    public function getConstructions(Request $request, $id)
+    public function index()
+    {
+        try {
+            $reservoirs = Reservoir::select(DB::raw("CONCAT('Hồ ', id) as name, id"))->get();
+
+            return response()->json(['message' => 'Yêu cầu thành công.', 'reservoirs' => $reservoirs]);
+        } catch (Exception $e) {
+            // return $e;
+            return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
+        }
+    }
+
+    public function getReservoir($id)
     {
         $reservoirInfo = array(
             'id' => 1,
@@ -43,10 +56,12 @@ class ReservoirController extends Controller
             'Quá trình quản lí khai khác' => 'test abc',
         );
 
+        // Các dữ liệu này giả lập cho các công trình phụ trợ mà hồ chứa sở hữu
+
         $mainDams =
             [
                 array('id' => 1, 'Chiều dài đỉnh đập' => 500, 'Chiều cao lớn nhất' => 50, 'Cao trình đỉnh đập', 'Cao trình TCS' => 100, 'Loại đập' => 'Đập đất'),
-                array('id' => 2, 'Chiều dài đỉnh đập' => 420, 'Chiều cao lớn nhất' => 20, 'Cao trình đỉnh đập', 'Cao trình TCS' => 80, 'Loại đập' => 'Đập đất'),
+                // array('id' => 2, 'Chiều dài đỉnh đập' => 420, 'Chiều cao lớn nhất' => 20, 'Cao trình đỉnh đập', 'Cao trình TCS' => 80, 'Loại đập' => 'Đập đất'),
             ];
 
         $subDams = [
@@ -66,6 +81,11 @@ class ReservoirController extends Controller
                 array('id' => 1, 'Tên' => 'Tràn ABCxyz', 'Chiều rộng tràn' => 200),
             ];
 
+        $monitors = [
+            array('id' => 1, 'Tên' => 'Hệ thống giám sát 01', 'Chiều dài' => 100),
+        ];
+
+
         $drainages = [
             array('id' => 1, 'Tên' => 'Tháo nước AQ', 'Chiều dài' => 100),
         ];
@@ -83,6 +103,7 @@ class ReservoirController extends Controller
             'sewers' => $sewers,
             'spillways' => $spillways,
             'drainages' => $drainages,
+            'monitors' => $monitors,
             'message' => 'Yêu cầu thành công.'
         ]);
     }

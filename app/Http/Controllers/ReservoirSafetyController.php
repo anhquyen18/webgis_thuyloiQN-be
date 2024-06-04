@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ReservoirSafety;
 use Illuminate\Http\Request;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\TemplateProcessor;
@@ -65,7 +66,7 @@ class ReservoirSafetyController extends Controller
                 }
             }
         } catch (Exception $e) {
-            return $e;
+            // return $e;
             return response()->json(['caution' => $e, 'message' => 'Thất bại. Vui lòng thử lại sau.'], 500);
         }
 
@@ -74,6 +75,14 @@ class ReservoirSafetyController extends Controller
 
     public function createSafetyReport(Request $request, $id)
     {
+        // $validated = $request->validate([
+        //     "id" => "required",
+        //     "finished" => "required",
+        // ], [
+        //     "username.required" => "Vui lòng n.",
+        //     "password.required" => "Vui lòng nhập mật khẩu.",
+        // ]);
+
         $user = auth()->user();
         $postData = $request->json()->all();
         $currentDateTime = Carbon::now();
@@ -81,6 +90,9 @@ class ReservoirSafetyController extends Controller
         $currentMonth = $currentDateTime->month;
         $currentDay = $currentDateTime->day;
 
+
+        // Đã get ở client những tạm thời chưa gửi lên
+        // Cứ giả lập dữ liệu tạm ở đây để có thông tin chot tạo báo cáo
         $reservoirInfo = array(
             'id' => 1,
             'Tên' => 'Hồ A1',
@@ -117,10 +129,12 @@ class ReservoirSafetyController extends Controller
             'abc' => 1,
         );
 
+
+        // Các dữ liệu này giả lập cho các công trình phụ trợ mà hồ chứa sở hữu
         $mainDams =
             [
                 array('id' => 1, 'DAM_CREST_LENGTH' => 500, 'MAX_HEIGHT' => 50, 'DAM_CREST_ELEVATION' => 65, 'SEAWALL_TOP_ELEVATION' => 100, 'TYPE' => 'Đập đất'),
-                array('id' => 2, 'DAM_CREST_LENGTH' => 420, 'MAX_HEIGHT' => 20, 'DAM_CREST_ELEVATION' => 81, 'SEAWALL_TOP_ELEVATION' => 80, 'TYPE' => 'Đập đất'),
+                // array('id' => 2, 'DAM_CREST_LENGTH' => 420, 'MAX_HEIGHT' => 20, 'DAM_CREST_ELEVATION' => 81, 'SEAWALL_TOP_ELEVATION' => 80, 'TYPE' => 'Đập đất'),
             ];
 
         $subDams = [
@@ -145,7 +159,9 @@ class ReservoirSafetyController extends Controller
         ];
         try {
             $image_storage = storage_path('images/safety-report');
+            // Lưu dữ liệu được gửi lên
             // Copy từ thư mục lưu tạm qua thư mục lưu trữ
+
             foreach ($postData['fileList'] as $file) {
                 if ($file['name']) {
                     $filePath = storage_path('temporary-file-uploaded') . '\\' . $user->id . '_' . $file['name'];
@@ -160,7 +176,27 @@ class ReservoirSafetyController extends Controller
                 }
             }
 
+            $date_finished = null;
+            if ($postData['finished'] == true) {
+                $date_finished = Carbon::now();
+            }
 
+            ReservoirSafety::create([
+                'name' => $postData['name'],
+                'reservoir_id' => $postData['id'],
+                'user_id' => $user->id,
+                'finished_status' => $postData['finished'],
+                'date_finished' => $date_finished,
+                'main_dam_status' => $postData['mainDams'][0]['status'],
+                'main_dam_description' => $postData['mainDams'][0]['description'],
+                'spillway_status' => $postData['spillways'][0]['status'],
+                'spillway_description' => $postData['spillways'][0]['description'],
+                'monitor_system_status' => $postData['monitors'][0]['status'],
+                'monitor_system_description' => $postData['monitors'][0]['description'],
+            ]);
+
+
+            // Trả về dữ liệu download nếu có
             if ($postData['download'] == true) {
                 $mainDamBlock = [];
                 for ($i = 0; $i < count($mainDams); $i++) {
@@ -178,30 +214,30 @@ class ReservoirSafetyController extends Controller
                     ];
                 }
 
-                $subDamBlock = [];
-                for ($i = 0; $i < count($subDams); $i++) {
-                    $subDamBlock[] = [
-                        'INDEX' => $i + 1,
-                        'NAME' => $i + 1,
-                        'LENGTH' => $subDams[$i]['Chiều dài'],
-                        'HEIGHT' => $subDams[$i]['Chiều cao'],
-                        'NORMAL_CHECK_BOX' => $this->getCheckbox(!$postData['subDams'][$i]['status']),
-                        'ABNORMAL_CHECK_BOX' => $this->getCheckbox($postData['subDams'][$i]['status']),
-                        'DESCRIPTION' => $postData['subDams'][$i]['description'],
-                    ];
-                }
+                // $subDamBlock = [];
+                // for ($i = 0; $i < count($subDams); $i++) {
+                //     $subDamBlock[] = [
+                //         'INDEX' => $i + 1,
+                //         'NAME' => $i + 1,
+                //         'LENGTH' => $subDams[$i]['Chiều dài'],
+                //         'HEIGHT' => $subDams[$i]['Chiều cao'],
+                //         'NORMAL_CHECK_BOX' => $this->getCheckbox(!$postData['subDams'][$i]['status']),
+                //         'ABNORMAL_CHECK_BOX' => $this->getCheckbox($postData['subDams'][$i]['status']),
+                //         'DESCRIPTION' => $postData['subDams'][$i]['description'],
+                //     ];
+                // }
 
-                $sewerBlock = [];
-                for ($i = 0; $i < count($sewers); $i++) {
-                    $sewerBlock[] = [
-                        'INDEX' => $i + 1,
-                        'NAME' => $sewers[$i]['Tên'],
-                        'LENGTH' => $sewers[$i]['Chiều dài'],
-                        'NORMAL_CHECK_BOX' => $this->getCheckbox(!$postData['sewers'][$i]['status']),
-                        'ABNORMAL_CHECK_BOX' => $this->getCheckbox($postData['sewers'][$i]['status']),
-                        'DESCRIPTION' => $postData['sewers'][$i]['description'],
-                    ];
-                }
+                // $sewerBlock = [];
+                // for ($i = 0; $i < count($sewers); $i++) {
+                //     $sewerBlock[] = [
+                //         'INDEX' => $i + 1,
+                //         'NAME' => $sewers[$i]['Tên'],
+                //         'LENGTH' => $sewers[$i]['Chiều dài'],
+                //         'NORMAL_CHECK_BOX' => $this->getCheckbox(!$postData['sewers'][$i]['status']),
+                //         'ABNORMAL_CHECK_BOX' => $this->getCheckbox($postData['sewers'][$i]['status']),
+                //         'DESCRIPTION' => $postData['sewers'][$i]['description'],
+                //     ];
+                // }
 
                 $spillwayBlock = [];
                 for ($i = 0; $i < count($spillways); $i++) {
@@ -216,17 +252,17 @@ class ReservoirSafetyController extends Controller
                 }
 
 
-                $drainageBlock = [];
-                for ($i = 0; $i < count($drainages); $i++) {
-                    $drainageBlock[] = [
-                        'INDEX' => $i + 1,
-                        'NAME' => $drainages[$i]['Tên'],
-                        'LENGTH' => $drainages[$i]['Chiều dài'],
-                        'NORMAL_CHECK_BOX' => $this->getCheckbox(!$postData['drainages'][$i]['status']),
-                        'ABNORMAL_CHECK_BOX' => $this->getCheckbox($postData['drainages'][$i]['status']),
-                        'DESCRIPTION' => $postData['drainages'][$i]['description'],
-                    ];
-                }
+                // $drainageBlock = [];
+                // for ($i = 0; $i < count($drainages); $i++) {
+                //     $drainageBlock[] = [
+                //         'INDEX' => $i + 1,
+                //         'NAME' => $drainages[$i]['Tên'],
+                //         'LENGTH' => $drainages[$i]['Chiều dài'],
+                //         'NORMAL_CHECK_BOX' => $this->getCheckbox(!$postData['drainages'][$i]['status']),
+                //         'ABNORMAL_CHECK_BOX' => $this->getCheckbox($postData['drainages'][$i]['status']),
+                //         'DESCRIPTION' => $postData['drainages'][$i]['description'],
+                //     ];
+                // }
 
 
                 $templateFilePath = storage_path('templates/mau-bao-cao-an-toan-dap.docx');
@@ -259,10 +295,10 @@ class ReservoirSafetyController extends Controller
                 $templateProcessor->setValue('LOWEST_LEVEL', $reservoirInfo['Mực nước thấp nhất']);
 
                 $templateProcessor->cloneBlock('MAIN_DAM_BLOCK', 0, true, false, $mainDamBlock);
-                $templateProcessor->cloneBlock('SUB_DAM_BLOCK', 0, true, false, $subDamBlock);
-                $templateProcessor->cloneBlock('SEWER_BLOCK', 0, true, false, $sewerBlock);
+                // $templateProcessor->cloneBlock('SUB_DAM_BLOCK', 0, true, false, $subDamBlock);
+                // $templateProcessor->cloneBlock('SEWER_BLOCK', 0, true, false, $sewerBlock);
                 $templateProcessor->cloneBlock('SPILLWAY_BLOCK', 0, true, false, $spillwayBlock);
-                $templateProcessor->cloneBlock('DRAINAGE_BLOCK', 0, true, false, $drainageBlock);
+                // $templateProcessor->cloneBlock('DRAINAGE_BLOCK', 0, true, false, $drainageBlock);
 
 
                 $templateProcessor->setValue('HAS_STREET_CHECK_BOX_1', $this->getCheckbox($reservoirInfo['Đường quản lí']));
@@ -270,8 +306,11 @@ class ReservoirSafetyController extends Controller
                 $templateProcessor->setValue('HAS_MONITOR_CHECK_BOX_1', $this->getCheckbox($reservoirInfo['Các loại quan trắc']));
                 $templateProcessor->setValue('HAS_MONITOR_CHECK_BOX_2', $this->getCheckbox(!$reservoirInfo['Các loại quan trắc']));
 
-                $templateProcessor->setValue('HAS_OPERATING_SYS_CHECK_BOX_1', $this->getCheckbox($reservoirInfo['Hệ thống giám sát vận hành']));
-                $templateProcessor->setValue('HAS_OPERATING_SYS_CHECK_BOX_2', $this->getCheckbox(!$reservoirInfo['Hệ thống giám sát vận hành']));
+                // $templateProcessor->setValue('HAS_OPERATING_SYS_CHECK_BOX_1', $this->getCheckbox($reservoirInfo['Hệ thống giám sát vận hành']));
+                // $templateProcessor->setValue('HAS_OPERATING_SYS_CHECK_BOX_2', $this->getCheckbox(!$reservoirInfo['Hệ thống giám sát vận hành']));
+                $templateProcessor->setValue('HAS_OPERATING_SYS_CHECK_BOX_1', $this->getCheckbox($postData['monitors'][0]['status']));
+                $templateProcessor->setValue('HAS_OPERATING_SYS_CHECK_BOX_2', $this->getCheckbox(!$postData['monitors'][0]['status']));
+                $templateProcessor->setValue('OPERATING_SYS_DESCRIPTION', $postData['monitors'][0]['description']);
 
                 $templateProcessor->setValue('HAS_DATABASE_CHECK_BOX_1', $this->getCheckbox($reservoirInfo['Cơ sở dữ liệu hồ chứa']));
                 $templateProcessor->setValue('HAS_DATABASE_CHECK_BOX_2', $this->getCheckbox(!$reservoirInfo['Cơ sở dữ liệu hồ chứa']));
@@ -279,8 +318,8 @@ class ReservoirSafetyController extends Controller
                 $templateProcessor->setValue('HAS_OPERATING_PROCEDURE_CHECK_BOX_1', $this->getCheckbox($reservoirInfo['Quy trình vận hành']));
                 $templateProcessor->setValue('HAS_OPERATING_PROCEDURE_CHECK_BOX_2', $this->getCheckbox(!$reservoirInfo['Quy trình vận hành']));
 
-                // $templateProcessor->setValue('HAS_OPERATING_SYS_CHECK_BOX_1', $this->getCheckbox(false));
-                // $templateProcessor->setValue('HAS_OPERATING_SYS_CHECK_BOX_2', $this->getCheckbox(!false));
+                $templateProcessor->setValue('HAS_OPERATING_SYS_CHECK_BOX_1', $this->getCheckbox(false));
+                $templateProcessor->setValue('HAS_OPERATING_SYS_CHECK_BOX_2', $this->getCheckbox(!false));
 
                 // $templateProcessor->setValue('HAS_DATABASE_BOX_1', $this->getCheckbox(false));
                 // $templateProcessor->setValue('HAS_DATABASE_BOX_2', $this->getCheckbox(!false));
@@ -297,6 +336,7 @@ class ReservoirSafetyController extends Controller
                 $headers = [
                     'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                 ];
+
                 return response()->download($outputFilePath, 'mau-bao-cao.docx', $headers)->deleteFileAfterSend();
             } else {
                 return response()->json(['message' => 'Tạo báo cáo thành công.']);
@@ -305,5 +345,35 @@ class ReservoirSafetyController extends Controller
             return $e;
             // return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
         }
+    }
+
+    public function index()
+    {
+        try {
+            $reports = ReservoirSafety::with(['user.organization' => function ($query) {
+                $query->select('id', 'name'); // Chỉ định các trường cần thiết của tổ chức
+            }])->get();
+
+            return response()->json(['message' => 'Thành công.', 'reports' => $reports]);
+        } catch (Exception $e) {
+            return response()->json(['caution' => $e, 'message' => 'Thất bại. Vui lòng thử lại sau.'], 500);
+        }
+    }
+
+    public function deleteSafetyReports(Request $request)
+    {
+        $postData = $request->json()->all();
+
+        try {
+            $reports = ReservoirSafety::whereIn('id', $postData)->delete();
+        } catch (Exception $e) {
+            return response()->json(['caution' => $e, 'message' => 'Cập nhật feature không thành công vui lòng thử lại sau.'], 500);
+        }
+
+        return response()->json(['message' => 'Xoá báo cáo thành công.']);
+    }
+
+    public function getSafetyReport(Request $request)
+    {
     }
 }

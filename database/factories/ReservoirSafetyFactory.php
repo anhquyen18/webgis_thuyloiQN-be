@@ -32,8 +32,8 @@ class ReservoirSafetyFactory extends Factory
             'main_dam_description' => fake()->sentence(),
             'spillway_status' => fake()->boolean(),
             'spillway_description' => fake()->sentence(),
-            'mornitor_system_status' => fake()->boolean(),
-            'mornitor_system_description' => fake()->sentence(),
+            'monitor_system_status' => fake()->boolean(),
+            'monitor_system_description' => fake()->sentence(),
         ];
     }
 }

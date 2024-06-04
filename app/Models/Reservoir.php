@@ -8,4 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Reservoir extends Model
 {
     use HasFactory;
+
+
+    public function safetyReports()
+    {
+        return $this->hasMany(ReservoirSafety::class);
+    }
 }

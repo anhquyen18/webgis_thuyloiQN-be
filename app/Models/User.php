@@ -78,4 +78,9 @@ class User extends Authenticatable implements JWTSubject
 
         return $this->belongsToMany(Policy::class, 'user_policies');
     }
+
+    public function safetyReports()
+    {
+        return $this->hasMany(ReservoirSafety::class);
+    }
 }

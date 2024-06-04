@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\Department;
 
-class FullAccessReports
+
+class AcceptedPolicies
 {
     /**
      * Handle an incoming request.
@@ -28,12 +29,9 @@ class FullAccessReports
             $allowDepartment = count(array_intersect($policies, $departmentPolicies)) > 0;
         }
 
-
-
         if ($allowUser || $allowDepartment) {
             return $next($request);
         }
-
-        return response()->json(['caution' => 'Unauthorized', 'message' => 'Bạn không đủ thẩm quyền để thực hiện điều này'], 403);
+        return $next($request);
     }
 }
