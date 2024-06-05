@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -12,14 +13,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('reservoir_safety', function (Blueprint $table) {
-            $table->id();
+            $table->string('id')->primary();
             $table->string('name');
             $table->timestamps();
             $table->boolean('finished_status');
             $table->dateTime('date_finished')->nullable();
 
-
-            $table->foreignId('reservoir_id')->constrained('reservoirs');
+            // $table->foreignId('reservoir_id')->constrained('reservoirs');
+            $table->string('reservoir_id');
+            $table->foreign('reservoir_id')->references('id')->on('reservoirs')->onDelete('restrict');
             $table->foreignId('user_id')->constrained('users');
 
             $table->boolean('main_dam_status')->nullable();

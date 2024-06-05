@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('reservoir_operation', function (Blueprint $table) {
-            $table->id();
+            $table->string('id')->primary();
+
             $table->string('name');
             $table->timestamps();
             $table->dateTime('date_finished')->nullable();
@@ -20,7 +21,10 @@ return new class extends Migration
             $table->double('zfv')->nullable();
             $table->double('water_level')->nullable();
 
-            $table->foreignId('reservoir_id')->constrained('reservoirs');
+            // $table->foreignId('reservoir_id')->constrained('reservoirs');
+            $table->string('reservoir_id');
+            $table->foreign('reservoir_id')->references('id')->on('reservoirs')->onDelete('restrict');
+
             $table->foreignId('user_id')->constrained('users');
         });
     }

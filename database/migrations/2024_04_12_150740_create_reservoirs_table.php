@@ -14,7 +14,7 @@ return new class extends Migration
         // Chưa sử dụng
         // Đang sử dụng tạm thời bảng ho_thuy_loi
         Schema::create('reservoirs', function (Blueprint $table) {
-            $table->id();
+            $table->string('id')->primary();
             $table->timestamps();
         });
     }

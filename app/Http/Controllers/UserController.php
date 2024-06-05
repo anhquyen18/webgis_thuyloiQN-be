@@ -38,46 +38,52 @@ class UserController extends Controller
             return response()->json(['message' => 'could_not_create_token'], 500);
         }
 
-        $user = User::select(
-            'users.id',
-            'users.name',
-            'users.username',
-            'avatar',
-            'phone_number',
-            'birthday',
-            'gender',
-            'users.department_id',
-            'users.organization_id',
-            'users.status_id',
-            'users.email',
-            'organizations.name as organization_name',
-            'departments.name as department_name',
-        )
-            ->leftJoin('organizations', 'users.organization_id', '=', 'organizations.id')
-            ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
-            ->where('users.username', '=', $credentials['username'])->first();
+        try {
+            $user = User::select(
+                'users.id',
+                'users.name',
+                'users.username',
+                'avatar',
+                'phone_number',
+                'birthday',
+                'gender',
+                'users.department_id',
+                'users.organization_id',
+                'users.status_id',
+                'users.email',
+                'organizations.name as organization_name',
+                'departments.name as department_name',
+            )
+                ->leftJoin('organizations', 'users.organization_id', '=', 'organizations.id')
+                ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+                ->where('users.username', '=', $credentials['username'])->first();
 
-        if (!$user) {
-            return response()->json(['message' => 'Không tìm thấy người dùng. Vui lòng thử lại sau.'], 500);
+            if (!$user) {
+                return response()->json(['message' => 'Không tìm thấy người dùng. Vui lòng thử lại sau.'], 500);
+            }
+
+            $avatar = '';
+            if ($user['avatar']) {
+                if (strrchr($user['avatar'], ".") === '.jpg')
+                    $avatar = 'data:image/jpg;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
+                else if (strrchr($user['avatar'], ".") === '.png')
+                    $avatar = 'data:image/png;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
+            }
+
+            $policies = $user->policies;
+
+            $department = Department::find($user->department_id);
+            if ($department) {
+                $policies = $policies->merge($department->policies);
+            }
+
+            $user->allPolicies = $policies;
+            $user->avatar_base64 = $avatar;
+        } catch (Exception $e) {
+            // return $e;
+            return response()->json(['message' => 'Đăng nhập không thành công.'], 500);
         }
 
-        $avatar = '';
-        if ($user['avatar']) {
-            if (strrchr($user['avatar'], ".") === '.jpg')
-                $avatar = 'data:image/jpg;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
-            else if (strrchr($user['avatar'], ".") === '.png')
-                $avatar = 'data:image/png;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
-        }
-
-        $policies = $user->policies;
-
-        $department = Department::find($user->department_id);
-        if ($department) {
-            $policies = $policies->merge($department->policies);
-        }
-
-        $user->allPolicies = $policies;
-        $user->avatar_base64 = $avatar;
 
         return response()->json(compact('token', 'user'));
 
@@ -95,50 +101,55 @@ class UserController extends Controller
     public function getAuthenticatedUser(Request $request)
     {
         $postData = $request->json()->all();
-        $user = User::select(
-            'users.id',
-            'users.name',
-            'users.username',
-            'avatar',
-            'phone_number',
-            'birthday',
-            'gender',
-            'users.department_id',
-            'users.organization_id',
-            'users.status_id',
-            'users.email',
-            'organizations.name as organization_name',
-            'departments.name as department_name',
-        )
-            ->leftJoin('organizations', 'users.organization_id', '=', 'organizations.id')
-            ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
-            ->where('users.id', '=',  auth()->user()->id)->first();
 
-        if (!$user) {
-            return response()->json(['message' => 'Không tìm thấy người dùng. Vui lòng thử lại sau.'], 500);
+
+        try {
+            $user = User::select(
+                'users.id',
+                'users.name',
+                'users.username',
+                'avatar',
+                'phone_number',
+                'birthday',
+                'gender',
+                'users.department_id',
+                'users.organization_id',
+                'users.status_id',
+                'users.email',
+                'organizations.name as organization_name',
+                'departments.name as department_name',
+            )
+                ->leftJoin('organizations', 'users.organization_id', '=', 'organizations.id')
+                ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+                ->where('users.id', '=',  auth()->user()->id)->first();
+
+            if (!$user) {
+                return response()->json(['message' => 'Không tìm thấy người dùng. Vui lòng thử lại sau.'], 500);
+            }
+
+
+
+            $avatar = '';
+            if ($user['avatar'] !== '') {
+                if (strrchr($user['avatar'], ".") === '.jpg')
+                    $avatar = 'data:image/jpg;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
+                else if (strrchr($user['avatar'], ".") === '.png')
+                    $avatar = 'data:image/png;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
+            };
+
+            $policies = $user->policies;
+
+            $department = Department::find($user->department_id);
+            if ($department) {
+                $policies = $policies->merge($department->policies);
+            }
+
+            $user->allPolicies = $policies;
+            $user->avatar_base64 = $avatar;
+        } catch (Exception $e) {
+            // return $e;
+            return response()->json(['message' => 'Đăng nhập không thành công.'], 500);
         }
-
-
-
-        $avatar = '';
-        if ($user['avatar'] !== '') {
-            if (strrchr($user['avatar'], ".") === '.jpg')
-                $avatar = 'data:image/jpg;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
-            else if (strrchr($user['avatar'], ".") === '.png')
-                $avatar = 'data:image/png;base64,' . base64_encode(file_get_contents(resource_path('assets/avatar/' .   $user['avatar'])));
-        };
-
-        $policies = $user->policies;
-
-        $department = Department::find($user->department_id);
-        if ($department) {
-            $policies = $policies->merge($department->policies);
-        }
-
-        $user->allPolicies = $policies;
-        $user->avatar_base64 = $avatar;
-
-
 
         return response()->json(compact('user'));
     }

@@ -26,7 +26,7 @@ class ReservoirSafetyFactory extends Factory
             'created_at' => fake()->dateTimeInInterval('-5 years'),
             'date_finished' => $date_finished,
             'finished_status' => $finished_status,
-            'reservoir_id' => fake()->numberBetween(1, 30),
+            'reservoir_id' => 'reservoir-000' . fake()->numberBetween(1, 9),
             'user_id' => fake()->numberBetween(1, 10),
             'main_dam_status' => fake()->boolean(),
             'main_dam_description' => fake()->sentence(),

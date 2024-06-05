@@ -49,7 +49,6 @@ class ReservoirSafetyController extends Controller
         try {
 
             foreach ($fileList as $file) {
-
                 if ($file['name']) {
                     $filePath = storage_path('temporary-file-uploaded') . '\\' . $user->id . '_' . $file['name'];
                     // $filePath =  $user->id . '_' . $file['name'];
@@ -166,6 +165,7 @@ class ReservoirSafetyController extends Controller
                 if ($file['name']) {
                     $filePath = storage_path('temporary-file-uploaded') . '\\' . $user->id . '_' . $file['name'];
                     if (File::exists($filePath)) {
+
                         File::copy($filePath, $image_storage . '\\' . $postData['id'] . '_' . $file['name']);
                         File::delete($filePath);
                     } else {
@@ -367,13 +367,22 @@ class ReservoirSafetyController extends Controller
         try {
             $reports = ReservoirSafety::whereIn('id', $postData)->delete();
         } catch (Exception $e) {
-            return response()->json(['caution' => $e, 'message' => 'Cập nhật feature không thành công vui lòng thử lại sau.'], 500);
+            return response()->json(['caution' => $e, 'message' => 'Xoá báo cáo thất bại, vui lòng thử lại sau.'], 500);
         }
 
         return response()->json(['message' => 'Xoá báo cáo thành công.']);
     }
 
-    public function getSafetyReport(Request $request)
+    public function getSafetyReport($id)
     {
+
+        try {
+            $report = ReservoirSafety::find($id);
+            // $reports = ReservoirSafety::whereIn('id', $postData)->delete();
+        } catch (Exception $e) {
+            return response()->json(['caution' => $e, 'message' => 'Cập nhật feature không thành công vui lòng thử lại sau.'], 500);
+        }
+
+        return response()->json(['message' => 'Yêu cầu thành công.', 'report' => $report]);
     }
 }
