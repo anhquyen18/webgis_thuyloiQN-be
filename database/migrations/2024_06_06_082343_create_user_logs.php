@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('action');
             $table->timestamps();
-            $table->morphs('log');
+            $table->string('log_id');
+            $table->string('log_type');
             $table->foreignId('user_id')->constrained('users')->onDelete('restrict');
         });
     }
