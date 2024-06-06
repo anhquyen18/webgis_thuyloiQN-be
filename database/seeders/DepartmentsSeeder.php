@@ -14,9 +14,9 @@ class DepartmentsSeeder extends Seeder
      */
     public function run(): void
     {
-        Department::create(['name' => 'Phòng kỹ thuật']);
-        Department::create(['name' => 'Phòng thư ký 23']);
+        Department::create(['name' => 'Phòng kỹ thuật', 'organization_id' => 1]);
+        Department::create(['name' => 'Phòng thư ký 23', 'organization_id' => 1]);
         Department::create(['name' => 'Phòng thư ký biên tập', 'organization_id' => 2]);
-        Department::create(['name' => 'ADMIN']);
+        Department::create(['name' => 'ADMIN', 'organization_id' => 1]);
     }
 }

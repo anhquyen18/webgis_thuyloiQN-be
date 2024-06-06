@@ -22,7 +22,7 @@ class ReservoirSafetyFactory extends Factory
         else
             $date_finished = null;
         return [
-            'name' => fake()->unique()->name(),
+            'name' => 'Báo cáo ' . fake()->unique()->name(),
             'created_at' => fake()->dateTimeInInterval('-5 years'),
             'date_finished' => $date_finished,
             'finished_status' => $finished_status,
