@@ -29,7 +29,8 @@ class DepartmentController extends Controller
                 )->withCount('users')->withCount('policies')
                     ->leftJoin('organizations', 'departments.organization_id', '=', 'organizations.id')->get()]);
             } else {
-                if (!$user['organization_id'] == $organizationId)
+
+                if ($user->organization->id != (int) $organizationId)
                     return response()->json(['message' => 'Tổ chức không hợp lệ.'], 500);
 
                 return response()->json(['allAccess' => $fullAccessOrganizations, 'departments'
@@ -62,7 +63,7 @@ class DepartmentController extends Controller
 
         try {
             if (!$fullAccessOrganizations) {
-                $postData['info']['organizationId'] = $user['organization_id'];
+                $postData['info']['organizationId'] = $user->organization->id;
             }
 
             $department = Department::create([
@@ -113,7 +114,7 @@ class DepartmentController extends Controller
             } else {
                 foreach ($departmentIds as $departmentId) {
                     $department = Department::find($departmentId);
-                    if ($department['organization_id'] == $user['organization_id'])  $department->delete();
+                    if ($department['organization_id'] == $user->organization->id)  $department->delete();
                 }
             }
         } catch (Exception $e) {
@@ -150,22 +151,23 @@ class DepartmentController extends Controller
             // id tổ chức của user mới cho trả về
             // Còn nếu không có cả quyền 1, kiểm tra department đang request phải trùng với department mà user sở hữu
             // Có quyền 2 thì truy cập department nào cũng được
+
             if (!$policies->contains('id',  $allAccessOrganizationsPolicy)) {
                 if ($policies->contains('id', $accessOrganizationPolicy)) {
-                    if ($department['organization_id'] != $user['organization_id']) {
+                    if ($department->organization_id != $user->organization->id) {
                         return response()->json(['message' => 'Phòng ban không thuộc quyền quản lí của người dùng.'], 500);
                     }
                 } else {
-                    if ($department['id'] != $user['department_id']) {
+                    if ($department['id'] != $user->organization->id) {
                         return response()->json(['message' => 'Phòng ban không thuộc quyền quản lí của người dùng.'], 500);
                     }
                 }
             }
 
             $department->policies;
-            $department->users =  $department->users()->select('id', 'name', 'email', 'created_at')->get();
+            $department->users =  $department->users()->select('id', 'name', 'email', 'created_at', 'department_id')->get();
         } catch (Exception $e) {
-            return $e;
+            // return $e;
             return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
         }
 
@@ -189,7 +191,7 @@ class DepartmentController extends Controller
             if (!$department)
                 return response()->json(['message' => 'Không tìm thấy phòng ban.'], 500);
 
-            if (!$fullAccessOrganizations && $department['organization_id'] != $user['organization_id']) {
+            if (!$fullAccessOrganizations && $department['organization_id'] != $user->organization->id) {
                 return response()->json(['message' => 'Phòng ban không thuộc quyền quản lí của người dùng.'], 500);
             }
 
@@ -214,8 +216,7 @@ class DepartmentController extends Controller
             if (!$department)
                 return response()->json(['message' => 'Không tìm thấy phòng ban.'], 500);
 
-            // return response()->json(['message' => !$department['organization_id'] == $user['organization_id'], 'message2' => $user['organization_id'], 'message3' => !$fullAccessOrganizations], 500);
-            if (!$fullAccessOrganizations && $department['organization_id'] != $user['organization_id']) {
+            if (!$fullAccessOrganizations && $department['organization_id'] != $user->organization->id) {
                 return response()->json(['message' => 'Phòng ban không thuộc quyền quản lí của người dùng.'], 500);
             }
 
@@ -245,7 +246,7 @@ class DepartmentController extends Controller
             if (!$department)
                 return response()->json(['message' => 'Không tìm thấy phòng ban.'], 500);
 
-            if (!$fullAccessOrganizations && $department['organization_id'] != $user['organization_id']) {
+            if (!$fullAccessOrganizations && $department['organization_id'] != $user->organization->id) {
                 return response()->json(['message' => 'Phòng ban không thuộc quyền quản lí của người dùng.'], 500);
             }
 
@@ -279,7 +280,7 @@ class DepartmentController extends Controller
                 return response()->json(['message' => 'Không tìm thấy phòng ban.'], 500);
 
             if (!$fullAccessOrganizations) {
-                if ($department['organization_id'] != $user['organization_id']) {
+                if ($department['organization_id'] != $user->organization->id) {
                     return response()->json(['message' => 'Phòng ban không thuộc quyền quản lí của người dùng.'], 500);
                 }
 
@@ -322,7 +323,7 @@ class DepartmentController extends Controller
                 return response()->json(['message' => 'Không tìm thấy phòng ban.'], 500);
 
             if (!$fullAccessOrganizations) {
-                if ($department['organization_id'] != $user['organization_id']) {
+                if ($department['organization_id'] != $user->organization->id) {
                     return response()->json(['message' => 'Phòng ban không thuộc quyền quản lí của người dùng.'], 500);
                 }
 

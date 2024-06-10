@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('object_activity_documents', function (Blueprint $table) {
-            $table->string('object_activity_id')->primary();
+            $table->id();
+            $table->string('object_activity_id');
             $table->string('name');
             $table->string('description')->nullable();
         });

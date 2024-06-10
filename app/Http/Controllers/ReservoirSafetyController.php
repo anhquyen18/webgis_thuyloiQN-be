@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ObjectActivityDocument;
 use App\Models\ReservoirSafety;
 use Illuminate\Http\Request;
 use PhpOffice\PhpWord\PhpWord;
@@ -165,7 +166,7 @@ class ReservoirSafetyController extends Controller
                 if ($file['name']) {
                     $filePath = storage_path('temporary-file-uploaded') . '\\' . $user->id . '_' . $file['name'];
                     if (File::exists($filePath)) {
-
+                        ObjectActivityDocument::create(['object_activity_id' => $postData['id'], 'name' => $file['name'], 'description' => '']);
                         File::copy($filePath, $image_storage . '\\' . $postData['id'] . '_' . $file['name']);
                         File::delete($filePath);
                     } else {
@@ -342,8 +343,8 @@ class ReservoirSafetyController extends Controller
                 return response()->json(['message' => 'Tạo báo cáo thành công.']);
             }
         } catch (Exception $e) {
-            return $e;
-            // return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
+            // return $e;
+            return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
         }
     }
 
@@ -373,16 +374,28 @@ class ReservoirSafetyController extends Controller
         return response()->json(['message' => 'Xoá báo cáo thành công.']);
     }
 
-    public function getSafetyReport($id)
+    public function getSafetyReport(ReservoirSafety $report)
     {
 
         try {
-            $report = ReservoirSafety::find($id);
+            // $report = ReservoirSafety::find($id);
             // $reports = ReservoirSafety::whereIn('id', $postData)->delete();
         } catch (Exception $e) {
-            return response()->json(['caution' => $e, 'message' => 'Cập nhật feature không thành công vui lòng thử lại sau.'], 500);
+            return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại, vui lòng thử lại sau.'], 500);
         }
 
         return response()->json(['message' => 'Yêu cầu thành công.', 'report' => $report]);
+    }
+
+    public function getSafetyReportImage($imageId)
+    {
+        try {
+            // $report = ReservoirSafety::find($id);
+            // $reports = ReservoirSafety::whereIn('id', $postData)->delete();
+        } catch (Exception $e) {
+            return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại, vui lòng thử lại sau.'], 500);
+        }
+
+        return response()->json(['message' => 'Yêu cầu thành công.']);
     }
 }

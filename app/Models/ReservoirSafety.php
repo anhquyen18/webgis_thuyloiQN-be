@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
+use App\Models\ObjectActivityDocument;
 
 class ReservoirSafety extends Model
 {
@@ -12,6 +13,7 @@ class ReservoirSafety extends Model
     protected $table = 'reservoir_safety';
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $appends = ['docs'];
     protected $fillable = [
         'id',
         'name', 'reservoir_id', 'date_finished',
@@ -27,6 +29,18 @@ class ReservoirSafety extends Model
     public function reservoir()
     {
         return $this->belongsTo(Reservoir::class);
+    }
+
+    public function getDocsAttribute()
+    {
+        // $reportId = $this->id;
+        $reportId = $this->id;
+
+        $docs = ObjectActivityDocument::where('object_activity_id', $reportId)->select('name')->get();
+
+        return [
+            'docs' => $docs
+        ];
     }
 
     protected static function boot()

@@ -43,6 +43,7 @@ Route::group(['middleware' => 'jwt'], function () {
     Route::post('upload-user-avatar/{id}', [UserController::class, 'uploadUserAvatar']);
 
     Route::get('/departments/{id}', [DepartmentController::class, 'getDepartment']);
+    Route::get('test-somethings', [UserController::class, 'testSomethings']);
 });
 
 
@@ -86,6 +87,7 @@ Route::group(['middleware' => ['jwt', $fullAccessReports]], function () {
 $readOnlySafetyReports = 'jwt.AcceptedPolicies:' . '9,10';
 Route::group(['middleware' => ['jwt', $readOnlySafetyReports]], function () {
     Route::get('reservoirs/safety-reports', [ReservoirSafetyController::class, 'index']);
+    Route::get('reservoirs/safety-reports/{report}', [ReservoirSafetyController::class, 'index']);
 });
 // Toàn quyền với các báo cáo an toàn
 $fullAccessSafetyReports = 'jwt.AcceptedPolicies:' . '10';
@@ -100,5 +102,3 @@ Route::group(['middleware' => ['jwt', $readOnlySafetyReports]], function () {
 //     Route::post('update-feature-info', [ShapefileController::class, 'updateFeatureInfo']);
 //     Route::put('update-feature-geom', [ShapefileController::class, 'updateFeatureGeom']);
 // });
-
-Route::post('test-somethings', [UserController::class, 'testSomethings']);

@@ -48,14 +48,14 @@ class UserController extends Controller
                 'birthday',
                 'gender',
                 'users.department_id',
-                'users.organization_id',
+                'departments.organization_id',
                 'users.status_id',
                 'users.email',
                 'organizations.name as organization_name',
                 'departments.name as department_name',
             )
-                ->leftJoin('organizations', 'users.organization_id', '=', 'organizations.id')
                 ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+                ->leftJoin('organizations', 'departments.organization_id', '=', 'organizations.id')
                 ->where('users.username', '=', $credentials['username'])->first();
 
             if (!$user) {
@@ -113,14 +113,14 @@ class UserController extends Controller
                 'birthday',
                 'gender',
                 'users.department_id',
-                'users.organization_id',
+                'departments.organization_id',
                 'users.status_id',
                 'users.email',
                 'organizations.name as organization_name',
                 'departments.name as department_name',
             )
-                ->leftJoin('organizations', 'users.organization_id', '=', 'organizations.id')
                 ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+                ->leftJoin('organizations', 'departments.organization_id', '=', 'organizations.id')
                 ->where('users.id', '=',  auth()->user()->id)->first();
 
             if (!$user) {
@@ -200,9 +200,6 @@ class UserController extends Controller
                 return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
 
             if (!$fullAccessOrganizations) {
-                if ($myUser['organization_id'] != $requestedUser['organization_id']) {
-                    return response()->json(['message' => 'Phòng ban không thuộc quyền quản lí của người dùng.'], 500);
-                }
 
                 // Quyền hạn được gán thêm có chứa quyền hạn cao hơn người dùng hiện có thì không được.
                 if (
@@ -304,19 +301,37 @@ class UserController extends Controller
         $user = auth()->user();
 
         try {
-            $users = $users = User::with('department', 'organization')->select('id', 'name', 'username', 'created_at', 'department_id', 'organization_id')->get();
+            $users = User::with('department')->select(
+                'users.id',
+                'users.name',
+                'username',
+                'users.created_at',
+                'users.department_id',
+            )
+                ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+                ->leftJoin('organizations', 'departments.organization_id', '=', 'organizations.id')
+                ->get();
             $policies = Policy::all();
-            if (!$fullAccessOrganizations) {
+            if (!$fullAccessOrganizations) {;
+
                 // User không có quyền "Truy cập các tổ chức" thì chỉ lấy được user trong tổ chức của chính user
-                if ($user['organization_id'] != null) {
-                    $users = User::with('department', 'organization')
-                        ->select('id', 'name', 'username', 'created_at', 'department_id', 'organization_id')
-                        ->where('organization_id', $user['organization_id'])->get();
+                if ($user->organization->id != null) {
+                    $users = User::with('department')->select(
+                        'users.id',
+                        'users.name',
+                        'username',
+                        'users.created_at',
+                        'users.department_id',
+                    )
+                        ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+                        ->leftJoin('organizations', 'departments.organization_id', '=', 'organizations.id')
+                        ->where('departments.organization_id', $user->organization->id)->get();
                 } else {
                     $users = null;
                 }
             }
         } catch (Exception $e) {
+            // return $e;
             return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
         }
 
@@ -327,9 +342,8 @@ class UserController extends Controller
     {
         $fullAccessOrganizations = $request->attributes->get('full_access_organizations');
         $myUser = auth()->user();
-
         try {
-            $requestedUser = User::with('policies')->find($id);
+            $requestedUser = User::with('policies')->with('department')->find($id);
 
             if (!$requestedUser)
                 return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
@@ -342,7 +356,7 @@ class UserController extends Controller
                 // User không có quyền "Truy cập các tổ chức" thì chỉ lấy được user trong tổ chức của chính user
                 $policies = Policy::whereNot('id', $allAccessOrganizationsPolicy)->get();
 
-                if ($myUser['organization_id'] == null || $myUser['organization_id'] != $requestedUser['organization_id']) {
+                if ($myUser->organization->id == null || $myUser->organization->id != $requestedUser->organization->id) {
                     return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
                 }
             }
@@ -352,8 +366,9 @@ class UserController extends Controller
             });
 
             $requestedUser->noPolicies = $otherPolicies->values()->all();
+            $requestedUser->organization = Department::with('organization')->find($myUser->department_id)->organization;
         } catch (Exception $e) {
-
+            return $e;
             return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
         }
 
@@ -366,6 +381,7 @@ class UserController extends Controller
     {
 
         // $postData = $request->json()->all();
-
+        $user = auth()->user();
+        return $user;
     }
 }

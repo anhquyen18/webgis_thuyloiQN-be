@@ -26,7 +26,6 @@ return new class extends Migration
 
 
             $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
-            $table->foreignId('organization_id')->nullable()->constrained('organizations')->nullOnDelete();
             $table->foreignId('status_id')->constrained('user_status');
             $table->rememberToken();
             $table->timestamps();
@@ -40,7 +39,6 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropForeign('users_department_id_foreign');
-            $table->dropForeign('users_organization_id_foreign');
             $table->dropForeign('users_status_id_foreign');
         });
         Schema::dropIfExists('users');

@@ -21,7 +21,7 @@ class UserSeeder extends Seeder
 
         User::create([
             'username' => 'admin1',
-            'name' => 'Admin',
+            'name' => 'Admin1',
             'email' => 'anhquyen.dut@gmail.com',
             'password' => Hash::make('admin1122'),
             'gender' => 'Nam',
@@ -29,37 +29,33 @@ class UserSeeder extends Seeder
             'phone_number' => '0355808535',
             'status_id' => 1,
             'department_id' => 2,
-            'organization_id' => 1,
         ]);
 
         User::create([
             'username' => 'admin2',
-            'name' => 'Admin',
+            'name' => 'Admin2',
             'password' => Hash::make('admin1122'),
             'email' => 'anhquyen.dut@gmail.com',
             'status_id' => '2',
             'department_id' => '2',
-            'organization_id' => '1',
         ]);
 
         User::create([
             'username' => 'admin3',
-            'name' => 'Admin',
+            'name' => 'Admin3',
             'password' => Hash::make('admin1122'),
             'email' => 'anhquyen.dut@gmail.com',
             'status_id' => '1',
             'department_id' => '2',
-            'organization_id' => '2',
         ]);
 
         User::create([
             'username' => 'admin4',
-            'name' => 'Admin',
+            'name' => 'Admin4',
             'password' => Hash::make('admin1122'),
             'email' => 'anhquyen.dut@gmail.com',
             'status_id' => '3',
             'department_id' => '1',
-            'organization_id' => '2',
         ]);
 
         User::create([
