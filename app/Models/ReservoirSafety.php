@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use App\Models\ObjectActivityDocument;
+use Illuminate\Support\Facades\DB;
 
 class ReservoirSafety extends Model
 {
@@ -35,12 +36,11 @@ class ReservoirSafety extends Model
     {
         // $reportId = $this->id;
         $reportId = $this->id;
+        $rootUrl = url('/api/safety-report/get-image/');
+        $imageUrl = 'CONCAT(\'' . $rootUrl . '/\',';
+        $docs = ObjectActivityDocument::where('object_activity_id', $reportId)->selectRaw("id,name," . $imageUrl . 'id) as rooturl')->get();
 
-        $docs = ObjectActivityDocument::where('object_activity_id', $reportId)->select('name')->get();
-
-        return [
-            'docs' => $docs
-        ];
+        return $docs;
     }
 
     protected static function boot()

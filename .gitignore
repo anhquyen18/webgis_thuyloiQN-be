@@ -6,6 +6,7 @@
 /storage/*.key
 /vendor
 /storage/images/*
+/storage/temporary-file-uploaded/*
 /resources/assets/avatar
 .env
 .env.backup
