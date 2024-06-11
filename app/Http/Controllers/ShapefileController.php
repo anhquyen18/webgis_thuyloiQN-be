@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 
 class ShapefileController extends Controller
 {
@@ -25,6 +26,7 @@ class ShapefileController extends Controller
                 ->get();
             return $result;
         }
+
         // $bigLake = DB::table('ho_thuy_loi')->select('ten')->where('phan_loai', '=', 1)->get();
         $bigLake = lakeQuery(1);
         $mediumLake = lakeQuery(2);

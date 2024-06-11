@@ -27,11 +27,12 @@ class User extends Authenticatable implements JWTSubject
         'gender',
         'birthday',
         'phone_number',
-        'organization_id',
         "department_id",
         "status_id",
     ];
-
+    protected $appends = [
+        'organization',
+    ];
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -62,14 +63,25 @@ class User extends Authenticatable implements JWTSubject
         'password' => 'hashed',
     ];
 
-    public function organization()
-    {
-        return $this->belongsTo(Organization::class);
-    }
-
     public function department()
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function setShouldOrganizationIdAttribute($value)
+    {
+        $this->shouldAppendCustomAttribute = $value;
+    }
+
+    public function getOrganizationAttribute()
+    {
+        if (is_null($this->department_id)) {
+            return 'Không tìm thấy department_id hoặc chưa được gọi kèm';
+        } else {
+            $department = Department::find($this->department_id);
+            $organization = Organization::find($department->organization_id);
+            return $organization;
+        }
     }
 
 
@@ -77,5 +89,10 @@ class User extends Authenticatable implements JWTSubject
     {
 
         return $this->belongsToMany(Policy::class, 'user_policies');
+    }
+
+    public function safetyReports()
+    {
+        return $this->hasMany(ReservoirSafety::class);
     }
 }

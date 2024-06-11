@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PolicyController;
+use App\Http\Controllers\ReservoirController;
+use App\Http\Controllers\ReservoirSafetyController;
+
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\Policy;
@@ -40,6 +43,7 @@ Route::group(['middleware' => 'jwt'], function () {
     Route::post('upload-user-avatar/{id}', [UserController::class, 'uploadUserAvatar']);
 
     Route::get('/departments/{id}', [DepartmentController::class, 'getDepartment']);
+    Route::get('test-somethings', [UserController::class, 'testSomethings']);
 });
 
 
@@ -69,16 +73,38 @@ Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganizations:2']], functi
     Route::get('get-no-organization-departments', [DepartmentController::class, 'getNoOrganizationDepartments']);
 });
 
+// Những quyền có thể tạo và chỉnh sửa các báo cáo
+$fullAccessReports = 'jwt.AcceptedPolicies:' . '6,8,10';
+Route::group(['middleware' => ['jwt', $fullAccessReports]], function () {
+    Route::post('upload-temporary-image', [ReservoirSafetyController::class, 'uploadTemporaryImage']);
+    Route::delete('delete-temporary-image', [ReservoirSafetyController::class, 'deleteTemporaryImage']);
+    Route::post('reservoirs/{id}/safety-report', [ReservoirSafetyController::class, 'createSafetyReport']);
+
+    Route::get('reservoirs/index', [ReservoirController::class, 'index']);
+    Route::get('reservoirs/{id}/info', [ReservoirController::class, 'getReservoir']);
+});
+
+// Quyền có thể đọc các báo cáo an toàn
+$readOnlySafetyReports = 'jwt.AcceptedPolicies:' . '9,10';
+Route::group(['middleware' => ['jwt', $readOnlySafetyReports]], function () {
+    Route::get('reservoirs/safety-reports', [ReservoirSafetyController::class, 'index']);
+    Route::get('reservoirs/safety-reports/{report}', [ReservoirSafetyController::class, 'index']);
+    Route::get('reservoirs/safety-reports/{report}/download', [ReservoirSafetyController::class, 'downloadSafetyReport']);
+});
+// Toàn quyền với các báo cáo an toàn
+$fullAccessSafetyReports = 'jwt.AcceptedPolicies:' . '10';
+Route::group(['middleware' => ['jwt', $readOnlySafetyReports]], function () {
+    Route::delete('reservoirs/safety-reports/delete', [ReservoirSafetyController::class, 'deleteSafetyReports']);
+    Route::get('reservoirs/safety-reports/{report}/update', [ReservoirSafetyController::class, 'updateSafetyReport']);
+});
+
+Route::group(['middleware' => ['jwtInUrl:6,8,10', $readOnlySafetyReports]], function () {
+    Route::get('safety-report/get-image/{imageId}', [ReservoirSafetyController::class, 'getSafetyReportImage']);
+});
+
 
 
 // Route::group(['middleware' => ['jwt', 'jwt.role:2']], function () {
 //     Route::post('update-feature-info', [ShapefileController::class, 'updateFeatureInfo']);
 //     Route::put('update-feature-geom', [ShapefileController::class, 'updateFeatureGeom']);
 // });
-
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
-Route::post('test-somethings', [UserController::class, 'testSomethings']);

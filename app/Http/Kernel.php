@@ -67,5 +67,7 @@ class Kernel extends HttpKernel
         'jwt' => \App\Http\Middleware\JwtMiddleware::class,
         'jwt.AllowAccessOrganization' => \App\Http\Middleware\AllowAccessOrganization::class,
         'jwt.AllowAccessOrganizations' => \App\Http\Middleware\AllowAccessOrganizations::class,
+        'jwt.AcceptedPolicies' => \App\Http\Middleware\AcceptedPolicies::class,
+        'jwtInUrl' => \App\Http\Middleware\jwtInUrl::class,
     ];
 }

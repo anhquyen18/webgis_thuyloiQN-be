@@ -45,7 +45,7 @@ class PolicyController extends Controller
             if (!$department) {
                 return response()->json(['message' => 'Không tìm thấy phòng ban.'], 500);
             }
-            if (!$fullAccessOrganizations && $department['organization_id'] != $user['organization_id']) {
+            if (!$fullAccessOrganizations && $department['organization_id'] != $user->organization->id) {
                 return response()->json(['message' => 'Phòng ban không thuộc quyền quản lí của người dùng.'], 500);
             }
 

@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('departments', function (Blueprint $table) {
+        Schema::create('user_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->string('description')->nullable();
-            $table->foreignId('organization_id')->constrained('organizations');
+            $table->string('action');
             $table->timestamps();
+            $table->string('log_id');
+            $table->string('log_type');
+            $table->foreignId('user_id')->constrained('users')->onDelete('restrict');
         });
     }
 
@@ -25,9 +26,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('departments', function (Blueprint $table) {
-            $table->dropForeign('departments_organization_id_foreign');
+        Schema::table('user_logs', function (Blueprint $table) {
+            $table->dropForeign('user_logs_user_id_foreign');
         });
-        Schema::dropIfExists('departments');
+        Schema::dropIfExists('user_logs');
     }
 };
