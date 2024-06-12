@@ -95,16 +95,15 @@ Route::group(['middleware' => ['jwt', $readOnlySafetyReports]], function () {
 $fullAccessSafetyReports = 'jwt.AcceptedPolicies:' . '10';
 Route::group(['middleware' => ['jwt', $readOnlySafetyReports]], function () {
     Route::delete('reservoirs/safety-reports/delete', [ReservoirSafetyController::class, 'deleteSafetyReports']);
-    Route::get('reservoirs/safety-reports/{report}/update', [ReservoirSafetyController::class, 'updateSafetyReport']);
+    Route::put('reservoirs/safety-reports/{report}/update', [ReservoirSafetyController::class, 'updateSafetyReport']);
 });
 
 Route::group(['middleware' => ['jwtInUrl:6,8,10', $readOnlySafetyReports]], function () {
     Route::get('safety-report/get-image/{imageId}', [ReservoirSafetyController::class, 'getSafetyReportImage']);
 });
 
-
-
-// Route::group(['middleware' => ['jwt', 'jwt.role:2']], function () {
-//     Route::post('update-feature-info', [ShapefileController::class, 'updateFeatureInfo']);
-//     Route::put('update-feature-geom', [ShapefileController::class, 'updateFeatureGeom']);
-// });
+// Quyền có xem log người dùng "Toàn quyền quản lí các tổ chức" ~ admin
+$adminPolicies = 'jwt.AcceptedPolicies:' . '2';
+Route::group(['middleware' => ['jwt', $readOnlySafetyReports]], function () {
+    Route::get('users/logs', [UserController::class, 'getLogs']);
+});

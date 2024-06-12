@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Policy;
 use Illuminate\Support\Facades\DB;
 use App\Models\Department;
+use App\Models\UserLog;
 use SebastianBergmann\Type\VoidType;
 
 class UserController extends Controller
@@ -374,6 +375,23 @@ class UserController extends Controller
 
 
         return response()->json(['user' => $requestedUser, 'message' => 'Yêu cầu thành công.']);
+    }
+
+    public function getLogs(Request $request)
+    {
+        // $validator = $request->validate([
+        //     "type" => ["string", 'regex:/^[a-zA-Z0-9\s]+$/'],
+        // ], []);
+
+        $type = $request->query('type');
+
+        try {
+            $logs = UserLog::with('user')->where('log_type', $type)->get();
+            return response()->json(['logs' => $logs, 'message' => 'Yêu cầu thành công.']);
+        } catch (Exception $e) {
+            return $e;
+            return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
+        }
     }
 
 

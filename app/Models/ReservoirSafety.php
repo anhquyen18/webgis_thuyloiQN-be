@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use App\Models\ObjectActivityDocument;
 use Illuminate\Support\Facades\DB;
+use App\Services\ActivityLogger;
 
 class ReservoirSafety extends Model
 {
@@ -32,6 +33,7 @@ class ReservoirSafety extends Model
         return $this->belongsTo(Reservoir::class);
     }
 
+    // Thằng documents ở dưới cũng cho ra kết qua i chang
     public function getDocsAttribute()
     {
         // $reportId = $this->id;
@@ -43,12 +45,28 @@ class ReservoirSafety extends Model
         return $docs;
     }
 
+    public function documents()
+    {
+        return $this->hasMany(ObjectActivityDocument::class, 'object_activity_id');
+    }
+
+
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($model) {
             $model->id = IdGenerator::generate(['table' => 'reservoir_safety', 'field' => 'id', 'length' => 20, 'prefix' => 'rsv-safety-']);
+
+            ActivityLogger::logActivity('created', $model);
+        });
+
+        static::updating(function ($model) {
+            ActivityLogger::logActivity('updated', $model);
+        });
+
+        static::deleting(function ($model) {
+            ActivityLogger::logActivity('deleted', $model);
         });
     }
 }
