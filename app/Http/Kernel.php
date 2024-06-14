@@ -69,5 +69,6 @@ class Kernel extends HttpKernel
         'jwt.AllowAccessOrganizations' => \App\Http\Middleware\AllowAccessOrganizations::class,
         'jwt.AcceptedPolicies' => \App\Http\Middleware\AcceptedPolicies::class,
         'jwtInUrl' => \App\Http\Middleware\jwtInUrl::class,
+        'checkLockedTime' => \App\Http\Middleware\CheckLockedTime::class,
     ];
 }
