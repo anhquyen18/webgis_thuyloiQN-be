@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Policy;
 use Illuminate\Support\Facades\DB;
 use App\Models\Department;
+use App\Models\LockedTime;
+use App\Models\UserLog;
+use Carbon\Carbon;
 use SebastianBergmann\Type\VoidType;
 
 class UserController extends Controller
@@ -78,9 +81,26 @@ class UserController extends Controller
             }
 
             $user->allPolicies = $policies;
+
+            // Kiểm tra khả năng đăng nhập lúc ứng dụng đang tạm khoá
+            // Nếu kiếm tra quyền admin trả về có phải admin không, policy 2 "Toàn quyền truy cập các tổ chức" ~ admin
+            $adminPolicy = 2;
+
+            if (!in_array($adminPolicy, $user->allPolicies->pluck('id')->toArray())) {
+                $latestLockedTime = LockedTime::orderBy('id', 'desc')->first();
+
+                if ($latestLockedTime) {
+                    $startTime = Carbon::parse($latestLockedTime->start_time);
+                    $endTime = Carbon::parse($latestLockedTime->end_time);
+                    $now = Carbon::now();
+                    if ($now->greaterThanOrEqualTo($startTime) && $now->lessThanOrEqualTo($endTime)) {
+                        return response()->json(['message' => 'Không thể đăng nhập do ứng dụng đang tạm khoá.'], 403);
+                    }
+                }
+            }
+
             $user->avatar_base64 = $avatar;
         } catch (Exception $e) {
-            // return $e;
             return response()->json(['message' => 'Đăng nhập không thành công.'], 500);
         }
 
@@ -374,6 +394,23 @@ class UserController extends Controller
 
 
         return response()->json(['user' => $requestedUser, 'message' => 'Yêu cầu thành công.']);
+    }
+
+    public function getLogs(Request $request)
+    {
+        // $validator = $request->validate([
+        //     "type" => ["string", 'regex:/^[a-zA-Z0-9\s]+$/'],
+        // ], []);
+
+        $type = $request->query('type');
+
+        try {
+            $logs = UserLog::with('user')->where('log_type', $type)->get();
+            return response()->json(['logs' => $logs, 'message' => 'Yêu cầu thành công.']);
+        } catch (Exception $e) {
+            return $e;
+            return response()->json(['caution' => $e, 'message' => 'Yêu cầu thất bại.'], 500);
+        }
     }
 
 

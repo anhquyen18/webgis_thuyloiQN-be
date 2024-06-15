@@ -31,6 +31,10 @@ class AcceptedPolicies
 
 
         if ($allowUser || $allowDepartment) {
+            // Nếu kiếm tra quyền admin, policy 2 "Toàn quyền truy cập các tổ chức" ~ admin
+            if (in_array('2', $policies)) {
+                $request->attributes->set('isAdmin', true);
+            }
             return $next($request);
         }
 

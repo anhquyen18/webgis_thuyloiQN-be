@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ObjectActivityDocument;
 use App\Models\ReservoirSafety;
+use App\Models\UserLog;
 use Illuminate\Http\Request;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\TemplateProcessor;
@@ -437,6 +438,7 @@ class ReservoirSafetyController extends Controller
             }
 
 
+
             // Trả về dữ liệu download nếu có
             if ($postData['download'] == true) {
                 $mainDamBlock = [];
@@ -591,7 +593,7 @@ class ReservoirSafetyController extends Controller
     public function index()
     {
         try {
-            $reports = ReservoirSafety::with('user')->get();
+            $reports = ReservoirSafety::with('user', 'documents')->get();
 
 
             return response()->json(['message' => 'Thành công.', 'reports' => $reports]);
@@ -607,7 +609,12 @@ class ReservoirSafetyController extends Controller
 
         try {
             $image_storage = storage_path('images/safety-report');
-            $reports = ReservoirSafety::whereIn('id', $postData)->delete();
+            $reports = ReservoirSafety::whereIn('id', $postData)->get();
+            // Tại sao không xoá luôn mà phải get?
+            // Vì lặp qua các model mới lưu log được
+            $reports->each(function ($report) {
+                $report->delete();
+            });
             $reportImages = ObjectActivityDocument::whereIn('object_activity_id', $postData)->delete();
             foreach ($postData as $id) {
                 $files = File::glob($image_storage . '/' . $id . '_*');
@@ -692,7 +699,7 @@ class ReservoirSafetyController extends Controller
             }
 
             $report->update([
-                'name' => $postData['name'],
+                'name' => $postData['name'] . ' ',
                 'finished_status' => $postData['finished'],
                 'main_dam_description' => $postData['mainDams'][0]['description'],
                 'main_dam_status' => $postData['mainDams'][0]['status'],

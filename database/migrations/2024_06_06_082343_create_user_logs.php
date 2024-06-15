@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('user_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('action');
+            $table->string('action'); // Thêm mới, Cập nhật, Xoá
             $table->timestamps();
-            $table->string('log_id');
-            $table->string('log_type');
+            $table->string('log_id'); // id object được log
+            $table->string('log_type'); // loại object
             $table->foreignId('user_id')->constrained('users')->onDelete('restrict');
         });
     }

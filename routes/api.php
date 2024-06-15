@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\LockedTimeController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ShapefileController;
 use Illuminate\Http\Request;
@@ -34,10 +35,8 @@ Route::post('get-feature-info', [ShapefileController::class, 'getFeatureInfo']);
 Route::post('search-feature-name', [ShapefileController::class, 'searchFeatureName']);
 
 
-Route::post('login', [UserController::class, 'login']);
 
 Route::group(['middleware' => 'jwt'], function () {
-    Route::get('get-authenticated-user', [UserController::class, 'getAuthenticatedUser']);
     Route::put('update-user-info/{id}', [UserController::class, 'updateUserInfo']);
     Route::put('update-user-password/{id}', [UserController::class, 'updateUserPassword']);
     Route::post('upload-user-avatar/{id}', [UserController::class, 'uploadUserAvatar']);
@@ -47,6 +46,7 @@ Route::group(['middleware' => 'jwt'], function () {
 });
 
 
+// chỗ middleware này cần fix lại theo acceptedPolciesMiddleware
 Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganization:1,2']], function () {
     Route::get('get-no-department-user', [UserController::class, 'getNoDepartmentUser']);
 
@@ -75,7 +75,7 @@ Route::group(['middleware' => ['jwt', 'jwt.AllowAccessOrganizations:2']], functi
 
 // Những quyền có thể tạo và chỉnh sửa các báo cáo
 $fullAccessReports = 'jwt.AcceptedPolicies:' . '6,8,10';
-Route::group(['middleware' => ['jwt', $fullAccessReports]], function () {
+Route::group(['middleware' => ['jwt', $fullAccessReports, 'checkLockedTime']], function () {
     Route::post('upload-temporary-image', [ReservoirSafetyController::class, 'uploadTemporaryImage']);
     Route::delete('delete-temporary-image', [ReservoirSafetyController::class, 'deleteTemporaryImage']);
     Route::post('reservoirs/{id}/safety-report', [ReservoirSafetyController::class, 'createSafetyReport']);
@@ -86,25 +86,35 @@ Route::group(['middleware' => ['jwt', $fullAccessReports]], function () {
 
 // Quyền có thể đọc các báo cáo an toàn
 $readOnlySafetyReports = 'jwt.AcceptedPolicies:' . '9,10';
-Route::group(['middleware' => ['jwt', $readOnlySafetyReports]], function () {
+Route::group(['middleware' => ['jwt', $readOnlySafetyReports, 'checkLockedTime']], function () {
     Route::get('reservoirs/safety-reports', [ReservoirSafetyController::class, 'index']);
     Route::get('reservoirs/safety-reports/{report}', [ReservoirSafetyController::class, 'index']);
     Route::get('reservoirs/safety-reports/{report}/download', [ReservoirSafetyController::class, 'downloadSafetyReport']);
 });
 // Toàn quyền với các báo cáo an toàn
 $fullAccessSafetyReports = 'jwt.AcceptedPolicies:' . '10';
-Route::group(['middleware' => ['jwt', $readOnlySafetyReports]], function () {
+Route::group(['middleware' => ['jwt', $readOnlySafetyReports, 'checkLockedTime']], function () {
     Route::delete('reservoirs/safety-reports/delete', [ReservoirSafetyController::class, 'deleteSafetyReports']);
-    Route::get('reservoirs/safety-reports/{report}/update', [ReservoirSafetyController::class, 'updateSafetyReport']);
+    Route::put('reservoirs/safety-reports/{report}/update', [ReservoirSafetyController::class, 'updateSafetyReport']);
 });
 
-Route::group(['middleware' => ['jwtInUrl:6,8,10', $readOnlySafetyReports]], function () {
+Route::group(['middleware' => ['jwtInUrl:6,8,10', $readOnlySafetyReports, 'checkLockedTime']], function () {
     Route::get('safety-report/get-image/{imageId}', [ReservoirSafetyController::class, 'getSafetyReportImage']);
 });
 
+// Quyền có xem log người dùng "Toàn quyền quản lí các tổ chức" ~ admin
+$adminPolicies = 'jwt.AcceptedPolicies:' . '2';
+Route::group(['middleware' => ['jwt', $adminPolicies, 'checkLockedTime']], function () {
+    Route::get('users/logs', [UserController::class, 'getLogs']);
+
+    Route::post('system/locked-times/create', [LockedTimeController::class, 'create']);
+    Route::get('system/locked-times/locked-time', [LockedTimeController::class, 'getLockedTime']);
+    Route::put('system/locked-times/{lockedTime}/end-early', [LockedTimeController::class, 'endEarly']);
+});
 
 
-// Route::group(['middleware' => ['jwt', 'jwt.role:2']], function () {
-//     Route::post('update-feature-info', [ShapefileController::class, 'updateFeatureInfo']);
-//     Route::put('update-feature-geom', [ShapefileController::class, 'updateFeatureGeom']);
-// });
+Route::group(['middleware' => ['jwt', $adminPolicies, 'checkLockedTime']], function () {
+    Route::get('get-authenticated-user', [UserController::class, 'getAuthenticatedUser']);
+});
+
+Route::post('login', [UserController::class, 'login']);
