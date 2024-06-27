@@ -10,7 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PolicyController;
 use App\Http\Controllers\ReservoirController;
 use App\Http\Controllers\ReservoirSafetyController;
-
+use App\Http\Controllers\UserSignupController;
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\Policy;
@@ -113,8 +113,9 @@ Route::group(['middleware' => ['jwt', $adminPolicies, 'checkLockedTime']], funct
 });
 
 
-Route::group(['middleware' => ['jwt', $adminPolicies, 'checkLockedTime']], function () {
+Route::group(['middleware' => ['jwt', 'checkLockedTime']], function () {
     Route::get('get-authenticated-user', [UserController::class, 'getAuthenticatedUser']);
 });
 
 Route::post('login', [UserController::class, 'login']);
+Route::post('signup', [UserSignupController::class, 'signup']);
