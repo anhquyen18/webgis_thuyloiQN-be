@@ -29,7 +29,6 @@ class AcceptedPolicies
             $allowDepartment = count(array_intersect($policies, $departmentPolicies)) > 0;
         }
 
-
         if ($allowUser || $allowDepartment) {
             // Nếu kiếm tra quyền admin, policy 2 "Toàn quyền truy cập các tổ chức" ~ admin
             if (in_array('2', $policies)) {
