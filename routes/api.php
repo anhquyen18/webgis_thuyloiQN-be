@@ -88,8 +88,8 @@ Route::group(['middleware' => ['jwt', $fullAccessReports, 'checkLockedTime']], f
 $readOnlySafetyReports = 'jwt.AcceptedPolicies:' . '9,10';
 Route::group(['middleware' => ['jwt', $readOnlySafetyReports, 'checkLockedTime']], function () {
     Route::get('reservoirs/safety-reports', [ReservoirSafetyController::class, 'index']);
-    Route::get('reservoirs/safety-reports/{report}', [ReservoirSafetyController::class, 'index']);
     Route::get('reservoirs/safety-reports/{report}/download', [ReservoirSafetyController::class, 'downloadSafetyReport']);
+    Route::get('reservoirs/safety-reports/search', [ReservoirSafetyController::class, 'reportSearch']);
 });
 // Toàn quyền với các báo cáo an toàn
 $fullAccessSafetyReports = 'jwt.AcceptedPolicies:' . '10';
