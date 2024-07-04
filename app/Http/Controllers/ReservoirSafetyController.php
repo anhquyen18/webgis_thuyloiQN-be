@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ObjectActivityDocument;
 use App\Models\ReservoirSafety;
 use App\Models\UserLog;
+use App\Services\TableSearch;
 use Illuminate\Http\Request;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\TemplateProcessor;
@@ -590,14 +591,31 @@ class ReservoirSafetyController extends Controller
         }
     }
 
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $reports = ReservoirSafety::with('user', 'documents')->get();
+
+            $pageSize = $request->query('pageSize', 20);
+            $reports = ReservoirSafety::with('user', 'documents')->paginate($pageSize);
 
 
             return response()->json(['message' => 'Thành công.', 'reports' => $reports]);
         } catch (Exception $e) {
+            return response()->json(['caution' => $e, 'message' => 'Thất bại. Vui lòng thử lại sau.'], 500);
+        }
+    }
+
+    public function reportSearch(Request $request)
+    {
+        try {
+            $searchValue = $request->query('searchValue', 20);
+            $pageSize = $request->query('pageSize', '');
+            $model = ReservoirSafety::with('user', 'documents');
+            $reports = TableSearch::find($model, 'name', $searchValue, $pageSize);
+
+            return response()->json(['message' => 'Thành công.', 'reports' => $reports]);
+        } catch (Exception $e) {
+            return $e;
             return response()->json(['caution' => $e, 'message' => 'Thất bại. Vui lòng thử lại sau.'], 500);
         }
     }
