@@ -85,9 +85,9 @@ Route::group(['middleware' => ['jwt', $fullAccessReports, 'checkLockedTime']], f
 });
 
 // Quyền có thể đọc các báo cáo an toàn
+Route::get('reservoirs/safety-reports', [ReservoirSafetyController::class, 'index']);
 $readOnlySafetyReports = 'jwt.AcceptedPolicies:' . '9,10';
 Route::group(['middleware' => ['jwt', $readOnlySafetyReports, 'checkLockedTime']], function () {
-    Route::get('reservoirs/safety-reports', [ReservoirSafetyController::class, 'index']);
     Route::get('reservoirs/safety-reports/{report}/download', [ReservoirSafetyController::class, 'downloadSafetyReport']);
     Route::get('reservoirs/safety-reports/search', [ReservoirSafetyController::class, 'reportSearch']);
 });
