@@ -1,56 +1,110 @@
-# This config was automatically generated from your source code
-# Stacks detected: deps:node:.,deps:php:.
 version: 2.1
-orbs:
-  node: circleci/node@5
-  php: circleci/php@1
+
 jobs:
-  build-node:
-    # Build node project
-    executor: node/default
-    steps:
-      - checkout
-      - node/install-packages:
-          cache-path: ~/project/node_modules
-          override-ci-command: npm install
-      - run:
-          command: npm run build
-      - run:
-          name: Create the ~/artifacts directory if it doesn't exist
-          command: mkdir -p ~/artifacts
-      # Copy output to artifacts dir
-      - run:
-          name: Copy artifacts
-          command: cp -R build dist public .output .next .docusaurus ~/artifacts 2>/dev/null || true
-      - store_artifacts:
-          path: ~/artifacts
-          destination: node-build
-  test-php:
-    # Install php packages and run tests
+  build:
     docker:
-      - image: cimg/php:8.1-node
+      - image: cimg/php:8.3-node
+
+      - image: circleci/postgres:13.5-bullseye-postgis-ram
+        environment:
+          POSTGRES_USER: root
+          POSTGRES_DB: circle_test
+          POSTGRES_PASSWORD: root
+
+
+
+    working_directory: ~/repo
+
     steps:
-      - checkout
-      - php/install-packages
+      - checkout:
+          path: ~/repo
+      
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:m9srz3elz7BkktLsfc+tcc3zQ3L5O4nPUuWJ3B87xOc"
+
+      # Khôi phục bộ nhớ cache Composer
+      - restore_cache:
+          keys:
+            - composer-cache-{{ .Branch }}-{{ checksum "composer.json" }}
+            - composer-cache-{{ .Branch }}
+            - composer-cache
+
+      - run: sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 6494C6D6997C215E
+
+      - run: sudo apt update
+      
       - run:
-          name: run tests
-          command: ./vendor/bin/phpunit
+          name: "Install Composer"
+          command: |
+            curl -sS https://getcomposer.org/installer | php
+            sudo mv composer.phar /usr/local/bin/composer
+
+      - run:
+          name: "Install PHP Extensions"
+          command: |
+            sudo apt-get update && sudo apt-get install -y libpq-dev
+            sudo docker-php-ext-install pdo pdo_pgsql
+
+      - run:
+          name: "Copy .env File"
+          command: cp .env.example .env
+
+      - run:
+          name: "Update Environment Variables"
+          command: |
+            sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=pgsql/' .env
+            sed -i 's/DB_HOST=127.0.0.1/DB_HOST=localhost/' .env
+            sed -i 's/DB_PORT=3306/DB_PORT=5432/' .env
+            sed -i 's/DB_DATABASE=laravel/DB_DATABASE=circle_test/' .env
+            sed -i 's/DB_USERNAME=root/DB_USERNAME=root/' .env
+            sed -i 's/DB_PASSWORD=/DB_PASSWORD=root/' .env
+
+      - run:
+          name: "Install Composer Dependencies"
+          command: |
+            composer update
+            composer install --prefer-dist --no-interaction
+          
+
+      # Lưu bộ nhớ cache Composer
+      - save_cache:
+          paths:
+            - ~/.composer/cache
+          key: composer-cache-{{ .Branch }}-{{ checksum "composer.json" }}
+
+      - run:
+          name: "Generate Application Key"
+          command: php artisan key:generate
+
+      - run:
+          name: "Run Database Migrations"
+          command: php artisan migrate --force
+
+      - run: ./vendor/bin/phpunit
+
+      - run:
+          name: "Run Tests"
+          command: php artisan test
+
+
   deploy:
-    # This is an example deploy job, not actually used by the workflow
-    docker:
-      - image: cimg/base:stable
+    machine: 
+      enabled: true
     steps:
-      # Replace this with steps to deploy to users
       - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
+          name: Deploy over SSH
+          command: |
+            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST 'cd /home/docker/site/backend-app && git fetch origin main && git pull origin main && git reset --hard origin/main && docker compose up -d --build backend web-server'
+
 workflows:
-  build-and-test:
+  version: 2
+  build_and_test:
     jobs:
-      - build-node:
+      - build
+      - deploy:
           requires:
-            - test-php
-      - test-php
-    # - deploy:
-    #     requires:
-    #       - build-node
+            - build
+          filters:
+            branches:
+              only: main
