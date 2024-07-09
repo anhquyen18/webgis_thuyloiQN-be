@@ -1,0 +1,110 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: cimg/php:8.3-node
+
+      - image: circleci/postgres:13.5-bullseye-postgis-ram
+        environment:
+          POSTGRES_USER: root
+          POSTGRES_DB: circle_test
+          POSTGRES_PASSWORD: root
+
+
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout:
+          path: ~/repo
+      
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:m9srz3elz7BkktLsfc+tcc3zQ3L5O4nPUuWJ3B87xOc"
+
+      # Khôi phục bộ nhớ cache Composer
+      - restore_cache:
+          keys:
+            - composer-cache-{{ .Branch }}-{{ checksum "composer.json" }}
+            - composer-cache-{{ .Branch }}
+            - composer-cache
+
+      - run: sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 6494C6D6997C215E
+
+      - run: sudo apt update
+      
+      - run:
+          name: "Install Composer"
+          command: |
+            curl -sS https://getcomposer.org/installer | php
+            sudo mv composer.phar /usr/local/bin/composer
+
+      - run:
+          name: "Install PHP Extensions"
+          command: |
+            sudo apt-get update && sudo apt-get install -y libpq-dev
+            sudo docker-php-ext-install pdo pdo_pgsql
+
+      - run:
+          name: "Copy .env File"
+          command: cp .env.example .env
+
+      - run:
+          name: "Update Environment Variables"
+          command: |
+            sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=pgsql/' .env
+            sed -i 's/DB_HOST=127.0.0.1/DB_HOST=localhost/' .env
+            sed -i 's/DB_PORT=3306/DB_PORT=5432/' .env
+            sed -i 's/DB_DATABASE=laravel/DB_DATABASE=circle_test/' .env
+            sed -i 's/DB_USERNAME=root/DB_USERNAME=root/' .env
+            sed -i 's/DB_PASSWORD=/DB_PASSWORD=root/' .env
+
+      - run:
+          name: "Install Composer Dependencies"
+          command: |
+            composer update
+            composer install --prefer-dist --no-interaction
+          
+
+      # Lưu bộ nhớ cache Composer
+      - save_cache:
+          paths:
+            - ~/.composer/cache
+          key: composer-cache-{{ .Branch }}-{{ checksum "composer.json" }}
+
+      - run:
+          name: "Generate Application Key"
+          command: php artisan key:generate
+
+      - run:
+          name: "Run Database Migrations"
+          command: php artisan migrate --force
+
+      - run: ./vendor/bin/phpunit
+
+      - run:
+          name: "Run Tests"
+          command: php artisan test
+
+
+  deploy:
+    machine: 
+      enabled: true
+    steps:
+      - run:
+          name: Deploy over SSH
+          command: |
+            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST 'cd /home/docker/site/backend-app && git fetch origin main && git pull origin main && git reset --hard origin/main && docker compose up -d --build backend web-server'
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
