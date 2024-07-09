@@ -34,6 +34,8 @@ class CheckLockedTime
                     } else {
                         return $next($request);
                     }
+                } else if (is_null($latestLockedTime)) {
+                    return $next($request);
                 }
             }
         } catch (Exception $e) {
