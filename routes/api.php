@@ -42,7 +42,7 @@ Route::group(['middleware' => 'jwt'], function () {
     Route::post('upload-user-avatar/{id}', [UserController::class, 'uploadUserAvatar']);
 
     Route::get('/departments/{id}', [DepartmentController::class, 'getDepartment']);
-    Route::get('update-feature-info', [ShapefileController::class, 'updateFeatureInfo']);
+    Route::post('update-feature-info', [ShapefileController::class, 'updateFeatureInfo']);
     Route::get('test-somethings', [UserController::class, 'testSomethings']);
 });
 
