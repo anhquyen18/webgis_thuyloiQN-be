@@ -23,7 +23,7 @@ class AcceptedPolicies
         // Kiểm tra user có quyền không
         $allowUser = count(array_intersect($policies, $userPolicies)) > 0;
         // Kiểm tra department của user có quyền không
-
+        $allowDepartment = false;
         if ($department && $department->policies != null) {
             $departmentPolicies =  $department->policies->pluck('id')->toArray();
             $allowDepartment = count(array_intersect($policies, $departmentPolicies)) > 0;
