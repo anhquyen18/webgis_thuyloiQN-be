@@ -78,6 +78,10 @@ jobs:
           command: php artisan key:generate
 
       - run:
+          name: "Generate JWT Key"
+          command: php artisan jwt:secret
+
+      - run:
           name: "Run Database Migrations"
           command: php artisan migrate --force
 
