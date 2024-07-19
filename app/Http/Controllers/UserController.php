@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PasswordRequest;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Arr;
@@ -16,7 +17,7 @@ use App\Models\Department;
 use App\Models\LockedTime;
 use App\Models\UserLog;
 use Carbon\Carbon;
-use SebastianBergmann\Type\VoidType;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -62,7 +63,7 @@ class UserController extends Controller
                 ->where('users.username', '=', $credentials['username'])->first();
 
             if (!$user) {
-                return response()->json(['message' => 'Không tìm thấy người dùng. Vui lòng thử lại sau.'], 500);
+                return response()->json(['message' => 'Không tìm thấy người dùng. Vui lòng thử lại sau.'], 404);
             }
 
             $avatar = '';
@@ -144,7 +145,7 @@ class UserController extends Controller
                 ->where('users.id', '=',  auth()->user()->id)->first();
 
             if (!$user) {
-                return response()->json(['message' => 'Không tìm thấy người dùng. Vui lòng thử lại sau.'], 500);
+                return response()->json(['message' => 'Không tìm thấy người dùng. Vui lòng thử lại sau.'], 404);
             }
 
 
@@ -188,11 +189,12 @@ class UserController extends Controller
 
     public function updateUserInfo(Request $request, $id)
     {
+        // Thiếu validation phía server
         $postData = $request->json()->all();
         try {
             $user = User::find($id);
             if (!$user)
-                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
+                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 404);
 
             $this->updateUserPersonalInfo($user, $postData);
 
@@ -217,7 +219,7 @@ class UserController extends Controller
 
             $requestedUser = User::find($id);
             if (!$requestedUser)
-                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
+                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 404);
 
             if (!$fullAccessOrganizations) {
 
@@ -282,28 +284,27 @@ class UserController extends Controller
         }
     }
 
-    public function updateUserPassword(Request $request, $id)
+    public function updateUserPassword(PasswordRequest $passwordRequest, $id)
     {
-        $postData = $request->json()->all();
-
+        $validatedPassword = $passwordRequest->validated();
         try {
             $user = User::find($id);
             if (!$user)
-                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
+                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 404);
 
 
-            if (Hash::check($postData['currentPass'], $user['password'])) {
-                $user['password'] = Hash::make($postData['checkPass']);
+            if (Hash::check($passwordRequest['currentPass'], $user['password'])) {
+                $user['password'] = Hash::make($validatedPassword['newPass']);
                 $user->save();
 
                 return response()->json(['message' => 'Đổi mật khẩu thành công.']);
             }
         } catch (Exception $e) {
-            // return $e;
+            Log::channel('test')->error('Có lỗi xảy ra: ' . $e->getMessage());
             return response()->json(['caution' => $e, 'message' => 'Cập nhật mật khẩu không thành công. Vui lòng thử lại sau.'], 500);
         }
 
-        return response()->json(['message' => 'Sai mật khẩu.'], 500);
+        return response()->json(['message' => 'Sai mật khẩu.'], 403);
     }
 
     public function getNoDepartmentUser(Request $request)
@@ -366,7 +367,7 @@ class UserController extends Controller
             $requestedUser = User::with('policies')->with('department')->find($id);
 
             if (!$requestedUser)
-                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
+                return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 404);
 
             $userPolicies = $requestedUser->policies()->pluck('policy_id');
             $policies = Policy::all();
@@ -377,7 +378,7 @@ class UserController extends Controller
                 $policies = Policy::whereNot('id', $allAccessOrganizationsPolicy)->get();
 
                 if ($myUser->organization->id == null || $myUser->organization->id != $requestedUser->organization->id) {
-                    return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 500);
+                    return response()->json(['caution' => '', 'message' => 'Không tìm thấy người dùng.'], 404);
                 }
             }
 

@@ -9,6 +9,7 @@
 /storage/temporary-file-uploaded/*
 /resources/assets/avatar
 .env
+.env.testing
 .env.backup
 .env.production
 .phpunit.result.cache

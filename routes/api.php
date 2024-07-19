@@ -113,6 +113,12 @@ Route::group(['middleware' => ['jwt', $adminPolicies, 'checkLockedTime']], funct
     Route::put('system/locked-times/{lockedTime}/end-early', [LockedTimeController::class, 'endEarly']);
 });
 
+Route::group(['middleware' => ['jwt']], function () {
+    Route::get('test-route', function () {
+        return response()->json(['message' => 'Authenticated']);
+    });
+});
+
 
 Route::group(['middleware' => ['jwt', 'checkLockedTime']], function () {
     Route::get('get-authenticated-user', [UserController::class, 'getAuthenticatedUser']);

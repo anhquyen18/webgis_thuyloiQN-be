@@ -27,7 +27,7 @@ class ReservoirSafetyFactory extends Factory
             'date_finished' => $date_finished,
             'finished_status' => $finished_status,
             'reservoir_id' => 'reservoir-000' . fake()->numberBetween(1, 9),
-            'user_id' => fake()->numberBetween(1, 10),
+            'user_id' => fake()->numberBetween(5, 10),
             'main_dam_status' => fake()->boolean(),
             'main_dam_description' => fake()->sentence(),
             'spillway_status' => fake()->boolean(),

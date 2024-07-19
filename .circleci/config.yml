@@ -81,6 +81,10 @@ jobs:
           name: "Run Database Migrations"
           command: php artisan migrate --force
 
+      - run:
+          name: "Seeding Database"
+          command: php artisan db:seed --class=DatabaseSeeder
+
       - run: ./vendor/bin/phpunit
 
       - run:

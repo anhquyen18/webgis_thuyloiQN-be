@@ -66,6 +66,6 @@ class UserSeeder extends Seeder
             'status_id' => '1',
         ]);
 
-        User::factory()->times(2000)->create();
+        User::factory()->times(20)->create();
     }
 }
